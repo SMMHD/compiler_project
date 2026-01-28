@@ -1,0 +1,23 @@
+
+=== گرامر BNF برای دستورات کنترل کش ===
+
+<Instruction>     ::= <Mnemonic> <Operand> | <Mnemonic>
+<Mnemonic>        ::= <CacheFlush> | <CacheWrite> | <CachePrefetch> | <CacheInvalidate>
+
+<CacheFlush>      ::= "CLFLUSH" | "CLFLUSHOPT"
+<CacheWrite>      ::= "CLWB"
+<CachePrefetch>   ::= "PREFETCHT0" | "PREFETCHT1" | "PREFETCHT2" | "PREFETCHNTA"
+<CacheInvalidate> ::= "WBINVD" | "INVD"
+
+<Operand>         ::= <MemoryAddress> | ε
+<MemoryAddress>   ::= "[" <BaseExpr> "]"
+<BaseExpr>        ::= <Register> <Offset> | <Register> | <Label>
+
+<Offset>          ::= "+" <Number> | "-" <Number>
+<Register>        ::= "EAX" | "EBX" | "ECX" | "EDX" | "ESI" | "EDI" | "EBP" | "ESP" |
+                      "RAX" | "RBX" | "RCX" | "RDX" | "RSI" | "RDI" | "RBP" | "RSP"
+
+<Number>          ::= <Digit>+
+<Digit>           ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+<Label>           ::= <Identifier>
+<Identifier>      ::= [a-zA-Z_][a-zA-Z0-9_]*

@@ -1,0 +1,124 @@
+متن کامل محتوای فایل PDF به شرح زیر است:
+
+---
+
+**Page 1**  
+1. ارائه دستورات به زبان اسمبلی  
+2. تحلیل نوع گرامر مربوطه (براساس جدول)  
+اگر گرامر ابهام داشت آن را رفع ابهام کنید  
+انواع دستورات CPU  
+
+1️ انتقال داده MOV, PUSH, POP:  
+2️ محاسباتی ADD, SUB, MUL, DIV:  
+3️ منطقی AND, OR, XOR, NOT:  
+4️ کنترل JMP, JZ, CALL, RET:  
+5️ مقایسه‌ای CMP, TEST:  
+
+دستوری که می‌خواهیم استفاده کنیم: JMP Start_Loop  
+یک مثال برای دستور JMP Start_Loop  
+
+```
+main:  
+MOV AX, 10 ; Load AX with 10  
+start_loop: ; Loop label  
+ADD AX, 1 ; Increment AX by 1  
+CMP AX, 20 ; Compare AX with 20  
+JNE start_loop ; Jump to start_loop if Not Equal  
+RET ; Return from procedure
+```
+
+قانون گرامر عبارت است از:  
+```
+<Instruction> ::= <Mnemonic> <Operand>  
+<Mnemonic> ::= JMP | JZ | JNZ | JE | CALL  
+<Operand> ::= <Label>  
+<Label> ::= <Identifier>  
+<Identifier> ::= [a-zA-Z_][a-zA-Z0-9_]*
+```
+
+---
+
+**Page 2**  
+```
+Instruction → Mnemonic Operand  
+Mnemonic → JMP  
+Operand → Label  
+Label → Identifier  
+Identifier → id
+```
+
+**Bottom-Up Parse (Shift-Reduce)**  
+
+Input: JMP start_loop  
+Stack: JMP  
+Status: Mnemonic recognized  
+
+Input: -  
+Stack: JMP start_loop  
+Status: Identifier recognized  
+
+Rule: Identifier → Label  
+Stack: JMP Label  
+Status: Label reduced  
+
+Rule: Label → Operand  
+Stack: JMP Operand  
+Status: Single operand  
+
+Rule: Mnemonic Operand → Instruction  
+Stack: Instruction  
+Status: Valid JMP instruction  
+
+---
+
+**Page 3**  
+Final Stack: Instruction  
+Parse Complete: JMP start_loop is VALID  
+
+
+
+
+
+
+LRقواعده کلی عبارت است از:  
+
+(0) S' → Instruction
+
+1. Instruction → Mnemonic Operand  
+2. Mnemonic → JMP  
+3. Operand → Label  
+4. Label → Identifier  
+5. Identifier → id
+
+جدول انتقالات LR(0):  
+```
+State | Input | Action | Next
+0     | JMP   | Shift  | S5
+5     | label | Reduce | R3
+3     | $     | Accept | -
+```
+
+JMP Start_loop کلی گرامر  
+
+IO:
+S' → • Instruction
+Instruction → • Memonic Operand
+Memonic → • JMP
+
+IS:
+Memonic → JMP •
+
+Instruction → Memonic • Operand
+Operand → • Label
+Label → • id
+
+Label → id ·
+
+Operand → Label ·
+
+
+
+---
+
+**Page 4**  
+دستور JMP Start_Loop بدون ابهام است و از نظر نحوی معتبر است.

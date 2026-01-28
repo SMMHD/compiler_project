@@ -1,0 +1,326 @@
+
+╔══════════════════════════════════════════════════════════════════════╗
+║              راهنمای استفاده از cache_parser.py                     ║
+╚══════════════════════════════════════════════════════════════════════╝
+
+📚 فهرست مطالب
+════════════════════════════════════════════════════════════════════
+1. استفاده پایه
+2. توابع اصلی
+3. کلاس‌های AST
+4. مثال‌های کاربردی
+5. خروجی‌ها
+6. مدیریت خطا
+
+
+1️⃣ استفاده پایه
+════════════════════════════════════════════════════════════════════
+
+# Import
+from cache_parser import parse_instruction, parse_file
+
+# پارس یک دستور
+ast = parse_instruction("CLFLUSH [EAX]")
+print(ast)  # Instruction(CLFLUSH, Memory([EAX]))
+
+# پارس یک فایل
+results, errors = parse_file("example1_simple.asm")
+
+
+2️⃣ توابع اصلی
+════════════════════════════════════════════════════════════════════
+
+▸ parse_instruction(code, debug=False)
+  پارس یک دستور assembly
+
+  پارامترها:
+    - code: str - رشته دستور
+    - debug: bool - نمایش مراحل پارسینگ
+
+  خروجی:
+    - Instruction object یا None
+
+  مثال:
+    ast = parse_instruction("CLFLUSH [EBX+16]", debug=True)
+
+
+▸ parse_file(filename, debug=False)
+  پارس یک فایل کامل
+
+  پارامترها:
+    - filename: str - نام فایل
+    - debug: bool - حالت دیباگ
+
+  خروجی:
+    - (results, errors) tuple
+    - results: [(line_num, code, ast), ...]
+    - errors: [(line_num, code, error), ...]
+
+  مثال:
+    results, errors = parse_file("test.asm")
+    for line_num, code, ast in results:
+        print(f"Line {line_num}: {ast}")
+
+
+▸ analyze_instruction(ast)
+  تحلیل دقیق دستور
+
+  پارامترها:
+    - ast: Instruction object
+
+  خروجی:
+    - dict حاوی تحلیل کامل
+
+  مثال:
+    analysis = analyze_instruction(ast)
+    print(analysis['category'])  # 'flush'
+
+
+▸ build_parser(debug=False)
+  ساخت parser object
+
+  برای استفاده پیشرفته:
+    lexer = build_lexer()
+    parser = build_parser()
+    ast = parser.parse("CLWB [RAX]", lexer=lexer)
+
+
+3️⃣ کلاس‌های AST
+════════════════════════════════════════════════════════════════════
+
+🔹 Instruction
+  ریشه درخت نحوی
+
+  Attributes:
+    - mnemonic: str - نام دستور
+    - operand: MemoryOperand | None
+    - type: 'Instruction'
+
+  Methods:
+    - to_dict() -> dict
+    - pretty_print(indent=0) -> list
+    - get_instruction_category() -> str
+
+  مثال:
+    inst = Instruction('CLFLUSH', memory_operand)
+    print(inst.mnemonic)  # 'CLFLUSH'
+    category = inst.get_instruction_category()  # 'flush'
+
+
+🔹 MemoryOperand
+  آدرس حافظه
+
+  Attributes:
+    - base: Register | Identifier
+    - offset: str | None  (مثل "+16" یا "-8")
+    - type: 'MemoryOperand'
+
+  Methods:
+    - to_dict() -> dict
+    - pretty_print(indent=0) -> list
+
+
+🔹 Register
+  رجیستر CPU
+
+  Attributes:
+    - name: str (مثل 'EAX', 'RBX')
+    - bit_width: int (32 یا 64)
+    - type: 'Register'
+
+  مثال:
+    reg = Register('RAX')
+    print(reg.bit_width)  # 64
+
+
+🔹 Identifier
+  شناسه یا لیبل
+
+  Attributes:
+    - name: str
+    - type: 'Identifier'
+
+
+4️⃣ مثال‌های کاربردی
+════════════════════════════════════════════════════════════════════
+
+📌 مثال 1: پارس ساده
+─────────────────────
+
+from cache_parser import parse_instruction
+
+code = "CLFLUSH [EAX]"
+ast = parse_instruction(code)
+
+if ast:
+    print("✅ موفق!")
+    print(f"دستور: {ast.mnemonic}")
+    print(f"عملوند: {ast.operand}")
+
+
+📌 مثال 2: نمایش Parse Tree
+─────────────────────────────
+
+ast = parse_instruction("CLFLUSHOPT [EBX+16]")
+
+if ast:
+    lines = ast.pretty_print()
+    for line in lines:
+        print(line)
+
+# خروجی:
+# Instruction: CLFLUSHOPT
+# ├─ Operand:
+#   MemoryOperand:
+#   ├─ Base: Register(EBX)
+#   └─ Offset: +16
+
+
+📌 مثال 3: تحلیل دستور
+────────────────────────
+
+from cache_parser import parse_instruction, analyze_instruction
+
+ast = parse_instruction("PREFETCHT0 [ECX-8]")
+analysis = analyze_instruction(ast)
+
+print(f"دسته: {analysis['category']}")
+print(f"توضیح: {analysis['description']}")
+print(f"رجیستر: {analysis['operand']['base_value']}")
+print(f"Offset: {analysis['operand']['offset_value']}")
+
+
+📌 مثال 4: خروجی JSON
+───────────────────────
+
+import json
+
+ast = parse_instruction("CLWB [cache_line]")
+json_output = ast.to_dict()
+
+print(json.dumps(json_output, indent=2, ensure_ascii=False))
+
+# خروجی:
+# {
+#   "type": "Instruction",
+#   "mnemonic": "CLWB",
+#   "operand": {
+#     "type": "MemoryOperand",
+#     "base": {
+#       "type": "Identifier",
+#       "name": "cache_line"
+#     },
+#     "offset": null
+#   }
+# }
+
+
+📌 مثال 5: پارس فایل
+──────────────────────
+
+from cache_parser import parse_file
+
+results, errors = parse_file("example2_with_offset.asm")
+
+print(f"✓ موفق: {len(results)} دستور")
+print(f"✗ خطا: {len(errors)} دستور")
+
+for line_num, code, ast in results:
+    print(f"\nخط {line_num}: {code}")
+    category = ast.get_instruction_category()
+    print(f"  دسته: {category}")
+
+
+📌 مثال 6: حالت Debug
+───────────────────────
+
+ast = parse_instruction("CLFLUSH [EAX]", debug=True)
+
+# خروجی:
+#   [REDUCE] CLFLUSH → Mnemonic (Flush)
+#   [REDUCE] EAX → Register
+#   [REDUCE] Register → BaseExpr
+#   [REDUCE] [ BaseExpr ] → MemoryAddress
+#   [REDUCE] MemoryAddress → Operand
+#   [REDUCE] Mnemonic + Operand → Instruction
+
+
+📌 مثال 7: بررسی نوع رجیستر
+──────────────────────────────
+
+ast = parse_instruction("PREFETCHT0 [RAX]")
+
+if ast.operand:
+    base = ast.operand.base
+    if isinstance(base, Register):
+        if base.bit_width == 64:
+            print("رجیستر 64-بیتی")
+        else:
+            print("رجیستر 32-بیتی")
+
+
+5️⃣ خروجی‌ها
+════════════════════════════════════════════════════════════════════
+
+🔸 خروجی to_dict()
+{
+  "type": "Instruction",
+  "mnemonic": "CLFLUSH",
+  "operand": {
+    "type": "MemoryOperand",
+    "base": {
+      "type": "Register",
+      "name": "EAX",
+      "bit_width": 32
+    },
+    "offset": null,
+    "has_offset": false
+  },
+  "has_operand": true
+}
+
+
+🔸 خروجی analyze_instruction()
+{
+  'mnemonic': 'CLFLUSH',
+  'category': 'flush',
+  'description': 'Cache Flush - پاک‌سازی خط کش',
+  'has_operand': True,
+  'operand': {
+    'base_type': 'Register',
+    'base_value': 'EAX',
+    'has_offset': False,
+    'offset_value': None,
+    'register_width': 32
+  }
+}
+
+
+6️⃣ مدیریت خطا
+════════════════════════════════════════════════════════════════════
+
+Parser خطاهای زیر را تشخیص می‌دهد:
+
+❌ فرمت نادرست:
+   CLFLUSH EAX         # کروشه فراموش شده
+   → باید: CLFLUSH [EAX]
+
+❌ عملوند نامعتبر:
+   CLFLUSH [+16]       # رجیستر نیست
+   → باید: CLFLUSH [EAX+16]
+
+❌ دستور ناقص:
+   CLFLUSH [EAX       # کروشه بسته نشده
+   → باید: CLFLUSH [EAX]
+
+مثال مدیریت خطا:
+
+try:
+    ast = parse_instruction("INVALID CODE")
+    if ast is None:
+        print("خطای نحوی رخ داد")
+except Exception as e:
+    print(f"خطا: {e}")
+
+
+════════════════════════════════════════════════════════════════════
