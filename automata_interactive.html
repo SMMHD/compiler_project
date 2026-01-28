@@ -1,0 +1,127 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 750px;
+                 background-color: #222222;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            <div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#ff9900", "font": {"color": "white"}, "id": 0, "label": "State 0", "shape": "ellipse", "size": 25, "title": "Start\nS\u0027 -\u003e . inst\ninst -\u003e . mnem op\n..."}, {"color": "#00ff00", "font": {"color": "white"}, "id": 1, "label": "State 1", "shape": "star", "size": 25, "title": "Accept\nS\u0027 -\u003e inst ."}, {"color": "#ffff00", "font": {"color": "white"}, "id": 2, "label": "State 2", "shape": "ellipse", "size": 25, "title": "inst -\u003e mnem . op\ninst -\u003e mnem ."}, {"color": "#97c2fc", "font": {"color": "white"}, "id": 3, "label": "State 3", "shape": "box", "size": 25, "title": "Reduce\nmnem -\u003e CLFLUSH ."}, {"color": "#97c2fc", "font": {"color": "white"}, "id": 4, "label": "State 4", "shape": "box", "size": 25, "title": "Reduce\nmnem -\u003e WBINVD ."}, {"color": "#97c2fc", "font": {"color": "white"}, "id": 5, "label": "State 5", "shape": "box", "size": 25, "title": "Reduce\ninst -\u003e mnem op ."}, {"color": "#ffff00", "font": {"color": "white"}, "id": 6, "label": "State 6", "shape": "ellipse", "size": 25, "title": "op -\u003e [ . base ]"}, {"color": "#ffff00", "font": {"color": "white"}, "id": 7, "label": "State 7", "shape": "ellipse", "size": 25, "title": "op -\u003e [ base . ]"}, {"color": "#ffff00", "font": {"color": "white"}, "id": 8, "label": "State 8", "shape": "ellipse", "size": 25, "title": "base -\u003e REG . off\nbase -\u003e REG ."}, {"color": "#97c2fc", "font": {"color": "white"}, "id": 9, "label": "State 9", "shape": "box", "size": 25, "title": "Reduce\nbase -\u003e ID ."}, {"color": "#97c2fc", "font": {"color": "white"}, "id": 10, "label": "State 10", "shape": "box", "size": 25, "title": "Reduce\nop -\u003e [ base ] ."}, {"color": "#97c2fc", "font": {"color": "white"}, "id": 11, "label": "State 11", "shape": "box", "size": 25, "title": "Reduce\nbase -\u003e REG off ."}, {"color": "#ffff00", "font": {"color": "white"}, "id": 12, "label": "State 12", "shape": "ellipse", "size": 25, "title": "off -\u003e + . NUM"}, {"color": "#97c2fc", "font": {"color": "white"}, "id": 13, "label": "State 13", "shape": "box", "size": 25, "title": "Reduce\noff -\u003e + NUM ."}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "white", "from": 0, "label": "inst", "to": 1}, {"arrows": "to", "color": "white", "from": 0, "label": "mnem", "to": 2}, {"arrows": "to", "color": "white", "from": 0, "label": "CLFLUSH", "to": 3}, {"arrows": "to", "color": "white", "from": 0, "label": "WBINVD", "to": 4}, {"arrows": "to", "color": "white", "from": 2, "label": "op", "to": 5}, {"arrows": "to", "color": "white", "from": 2, "label": "[", "to": 6}, {"arrows": "to", "color": "white", "from": 6, "label": "base", "to": 7}, {"arrows": "to", "color": "white", "from": 6, "label": "REG", "to": 8}, {"arrows": "to", "color": "white", "from": 6, "label": "ID", "to": 9}, {"arrows": "to", "color": "white", "from": 7, "label": "]", "to": 10}, {"arrows": "to", "color": "white", "from": 8, "label": "off", "to": 11}, {"arrows": "to", "color": "white", "from": 8, "label": "+", "to": 12}, {"arrows": "to", "color": "white", "from": 12, "label": "NUM", "to": 13}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {"edges": {"font": {"size": 16, "align": "middle"}, "smooth": {"type": "curvedCW", "roundness": 0.2}}, "physics": {"forceAtlas2Based": {"gravitationalConstant": -100, "springLength": 150, "springConstant": 0.05}, "minVelocity": 0.75, "solver": "forceAtlas2Based"}};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

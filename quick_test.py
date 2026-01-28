@@ -1,115 +1,119 @@
-#!/usr/bin/env python3
 """
-تست سریع 30 ثانیه‌ای Parser
-فقط اجرا کنید و نتیجه را ببینید!
+تست سریع Parser دستورات کش (نسخه ویندوز)
+برای اجرا: python quick_test.py
 """
 
-def quick_test():
-    print("\n" + "🚀 " * 30)
-    print(" " * 25 + "تست سریع PARSER")
-    print("🚀 " * 30 + "\n")
+import sys
+import time
 
-    tests_passed = 0
-    tests_total = 0
+# ---------------------------------------------------------
+# تابع برای چاپ سرتیترهای زیبا
+# ---------------------------------------------------------
+def print_header(title):
+    print("\n" + "═" * 60)
+    print(f"   {title}")
+    print("═" * 60)
 
-    # تست 1: Import
-    print("1️⃣  Import کردن ماژول‌ها...", end=" ")
-    tests_total += 1
+# ---------------------------------------------------------
+# تابع اصلی اجرای هر تست
+# ---------------------------------------------------------
+def run_test(name, code_to_test, expected_mnemonic=None, expected_offset=None):
+    print(f"🔹 تست: {name}")
+    print(f"   کد: {code_to_test}")
+    
+    try:
+        # تلاش برای وارد کردن پارسر (Import)
+        # این کار داخل تابع است تا اگر فایل نبود، برنامه کامل متوقف نشود
+        from cache_parser import parse_instruction
+        
+        # اندازه‌گیری زمان اجرا
+        start_time = time.time()
+        ast = parse_instruction(code_to_test)
+        duration = (time.time() - start_time) * 1000
+        
+        if ast:
+            print(f"   ✅ موفق ({duration:.2f}ms)")
+            
+            # چک کردن نام دستور (Mnemonic)
+            if expected_mnemonic and ast.mnemonic != expected_mnemonic:
+                print(f"      ⚠️ هشدار: Mnemonic اشتباه است (انتظار: {expected_mnemonic}, دریافت: {ast.mnemonic})")
+                return False
+                
+            # چک کردن افست (Offset) اگر وجود داشته باشد
+            if expected_offset:
+                if not ast.operand or ast.operand.offset != expected_offset:
+                    print(f"      ⚠️ هشدار: Offset اشتباه است")
+                    return False
+            
+            return True
+        else:
+            print("   ❌ ناموفق (Parse result is None)")
+            return False
+            
+    except ImportError:
+        print("   ❌ خطا: فایل cache_parser.py پیدا نشد!")
+        print("      (مطمئن شوید که فایل cache_parser.py در کنار همین فایل است)")
+        return False
+    except Exception as e:
+        print(f"   ❌ خطا: {e}")
+        return False
+
+# ---------------------------------------------------------
+# تابع برای نمایش نمونه درخت (فقط در صورت موفقیت)
+# ---------------------------------------------------------
+def show_tree_demo():
+    print_header("نمایش Parse Tree (نمونه)")
     try:
         from cache_parser import parse_instruction
-        print("✅")
-        tests_passed += 1
+        code = "CLFLUSHOPT [EBX+16]"
+        ast = parse_instruction(code)
+        
+        print(f"کد نمونه: {code}\n")
+        if ast:
+            # چاپ خط به خط درخت
+            for line in ast.pretty_print():
+                print(line)
+        else:
+            print("❌ پارس نشد")
+            
     except Exception as e:
-        print(f"❌ ({e})")
-        return
+        print(f"❌ خطا: {e}")
 
-    # تست 2: پارس ساده
-    print("2️⃣  پارس دستور ساده...", end=" ")
-    tests_total += 1
-    try:
-        ast = parse_instruction("CLFLUSH [EAX]")
-        assert ast is not None
-        assert ast.mnemonic == "CLFLUSH"
-        print("✅")
-        tests_passed += 1
-    except Exception as e:
-        print(f"❌ ({e})")
-
-    # تست 3: پارس با offset
-    print("3️⃣  پارس دستور با offset...", end=" ")
-    tests_total += 1
-    try:
-        ast = parse_instruction("CLFLUSHOPT [EBX+16]")
-        assert ast is not None
-        assert ast.operand.offset == "+16"
-        print("✅")
-        tests_passed += 1
-    except Exception as e:
-        print(f"❌ ({e})")
-
-    # تست 4: بدون operand
-    print("4️⃣  پارس دستور بدون operand...", end=" ")
-    tests_total += 1
-    try:
-        ast = parse_instruction("WBINVD")
-        assert ast is not None
-        assert ast.operand is None
-        print("✅")
-        tests_passed += 1
-    except Exception as e:
-        print(f"❌ ({e})")
-
-    # تست 5: Parse Tree
-    print("5️⃣  ساخت Parse Tree...", end=" ")
-    tests_total += 1
-    try:
-        ast = parse_instruction("CLWB [cache_line]")
-        lines = ast.pretty_print()
-        assert len(lines) > 0
-        print("✅")
-        tests_passed += 1
-    except Exception as e:
-        print(f"❌ ({e})")
-
-    # تست 6: JSON
-    print("6️⃣  تولید JSON...", end=" ")
-    tests_total += 1
-    try:
-        ast = parse_instruction("PREFETCHT0 [ECX]")
-        json_dict = ast.to_dict()
-        assert 'mnemonic' in json_dict
-        print("✅")
-        tests_passed += 1
-    except Exception as e:
-        print(f"❌ ({e})")
-
-    # نتیجه
-    print("\n" + "─" * 80)
-    print(f"\n📊 نتیجه: {tests_passed}/{tests_total} تست موفق")
-
-    if tests_passed == tests_total:
-        print("\n🎉 عالی! Parser کاملا درست کار می‌کند!")
-        print("\n💡 حالا می‌توانید:")
-        print("   • از Parser در پروژه استفاده کنید")
-        print("   • فایل‌های assembly را پارس کنید")
-        print("   • Parse Tree و JSON تولید کنید")
-    elif tests_passed > tests_total / 2:
-        print("\n⚠️  Parser تا حدودی کار می‌کند ولی مشکلاتی دارد")
-        print("   بررسی کنید که cache_parser.py درست نوشته شده باشد")
+# ---------------------------------------------------------
+# تابع اصلی برنامه
+# ---------------------------------------------------------
+def main():
+    print_header("🚀 شروع تست سریع Parser")
+    
+    # لیست تست‌هایی که انجام می‌شوند
+    # فرمت: (نام تست، کد اسمبلی، نام دستور مورد انتظار، افست مورد انتظار)
+    tests = [
+        ("دستور ساده", "CLFLUSH [EAX]", "CLFLUSH", None),
+        ("دستور با Offset مثبت", "CLFLUSHOPT [EBX+16]", "CLFLUSHOPT", "+16"),
+        ("دستور با Offset منفی", "PREFETCHT0 [ECX-8]", "PREFETCHT0", "-8"),
+        ("دستور بدون Operand", "WBINVD", "WBINVD", None),
+        ("دستور با Label", "CLWB [cache_line]", "CLWB", None),
+        ("دستور 64 بیتی", "PREFETCHNTA [RAX+128]", "PREFETCHNTA", "+128"),
+    ]
+    
+    passed = 0
+    # حلقه برای اجرای تک تک تست‌ها
+    for name, code, mnemonic, offset in tests:
+        if run_test(name, code, mnemonic, offset):
+            passed += 1
+        print("-" * 40)
+            
+    # نمایش خلاصه نتایج
+    print_header("📊 نتیجه نهایی")
+    print(f"تعداد کل تست‌ها: {len(tests)}")
+    print(f"تعداد موفق:      {passed}")
+    print(f"تعداد ناموفق:    {len(tests) - passed}")
+    
+    if passed == len(tests):
+        print("\n🎉 عالی! همه چیز درست کار می‌کند.")
+        show_tree_demo()
     else:
-        print("\n❌ Parser کار نمی‌کند!")
-        print("   بررسی کنید:")
-        print("   • آیا cache_lexer.py و cache_parser.py موجود هستند؟")
-        print("   • آیا PLY نصب شده؟ (pip install ply)")
-
-    print("\n" + "─" * 80)
+        print("\n⚠️ برخی تست‌ها شکست خوردند. لطفا خطاها را بررسی کنید.")
 
 if __name__ == "__main__":
-    try:
-        quick_test()
-    except KeyboardInterrupt:
-        print("\n\n⚠️  تست متوقف شد")
-    except Exception as e:
-        print(f"\n\n❌ خطای غیرمنتظره: {e}")
-        import traceback
-        traceback.print_exc()
+    main()

@@ -1,0 +1,49 @@
+// LR(0) Automata
+digraph {
+	rankdir=LR
+	node [fontname=Consolas shape=box style=filled]
+	0 [label="State 0
+S -> . inst
+inst -> . mnem op" fillcolor="#E0FFFF"]
+	1 [label="State 1
+S -> inst . (Accept)" fillcolor="#90EE90"]
+	2 [label="State 2
+inst -> mnem . op
+inst -> mnem ." fillcolor="#E0FFFF"]
+	3 [label="State 3
+mnem -> CLFLUSH ." fillcolor="#90EE90"]
+	4 [label="State 4
+mnem -> WBINVD ." fillcolor="#90EE90"]
+	5 [label="State 5
+inst -> mnem op ." fillcolor="#90EE90"]
+	6 [label="State 6
+op -> [ . base ]" fillcolor="#E0FFFF"]
+	7 [label="State 7
+op -> [ base . ]" fillcolor="#E0FFFF"]
+	8 [label="State 8
+base -> REG . off
+base -> REG ." fillcolor="#E0FFFF"]
+	9 [label="State 9
+base -> ID ." fillcolor="#90EE90"]
+	10 [label="State 10
+op -> [ base ] ." fillcolor="#90EE90"]
+	11 [label="State 11
+base -> REG off ." fillcolor="#90EE90"]
+	12 [label="State 12
+off -> + . NUM" fillcolor="#E0FFFF"]
+	13 [label="State 13
+off -> + NUM ." fillcolor="#90EE90"]
+	0 -> 1 [label=inst]
+	0 -> 2 [label=mnem]
+	0 -> 3 [label=CLFLUSH]
+	0 -> 4 [label=WBINVD]
+	2 -> 5 [label=op]
+	2 -> 6 [label="["]
+	6 -> 7 [label=base]
+	6 -> 8 [label=REG]
+	6 -> 9 [label=ID]
+	7 -> 10 [label="]"]
+	8 -> 11 [label=off]
+	8 -> 12 [label="+"]
+	12 -> 13 [label=NUM]
+}
