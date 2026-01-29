@@ -148,8 +148,6 @@ class Instruction(ASTNode):
                 steps.append("→ CacheWrite Operand")
             elif category == 'prefetch':
                 steps.append("→ CachePrefetch Operand")
-            elif category == 'invalidate':
-                steps.append("→ CacheInvalidate Operand")
 
             steps.append(f"→ {self.mnemonic} Operand")
             steps.append(f"→ {self.mnemonic} MemoryAddress")
@@ -168,12 +166,8 @@ class Instruction(ASTNode):
                 steps.append(f"→ {self.mnemonic} [ Identifier ]")
                 steps.append(f"→ {self.mnemonic} [ {self.operand.base.name} ]")
         else:
-            steps.append("→ Mnemonic")
-
-            category = self.get_instruction_category()
-            if category == 'invalidate':
-                steps.append("→ CacheInvalidate")
-
+            # دستور بدون Operand (فقط WBINVD و INVD)
+            steps.append("→ CacheInvalidate")
             steps.append(f"→ {self.mnemonic}")
 
         return steps
@@ -296,60 +290,84 @@ class Identifier(ASTNode):
 #                          Grammar Rules
 # ═══════════════════════════════════════════════════════════════════
 
-# قانون 1: دستور با عملوند
-def p_instruction_with_operand(p):
-    """instruction : mnemonic operand"""
+# ───────────────────────────────────────────────────────────────────
+# قوانین دستورات با Operand (الزامی برای Flush، Prefetch، WriteBack)
+# ───────────────────────────────────────────────────────────────────
+
+# قانون 1: دستورات Flush با operand
+def p_instruction_flush_with_operand(p):
+    """instruction : flush_mnemonic operand"""
     p[0] = Instruction(p[1], p[2])
     if parser_debug:
-        print(f"  [REDUCE] Mnemonic + Operand → Instruction")
+        print(f"  [REDUCE] {p[1]} + Operand → Instruction (Flush)")
 
 
-# قانون 2: دستور بدون عملوند
-def p_instruction_without_operand(p):
-    """instruction : mnemonic"""
+# قانون 2: دستورات Prefetch با operand
+def p_instruction_prefetch_with_operand(p):
+    """instruction : prefetch_mnemonic operand"""
+    p[0] = Instruction(p[1], p[2])
+    if parser_debug:
+        print(f"  [REDUCE] {p[1]} + Operand → Instruction (Prefetch)")
+
+
+# قانون 3: دستورات WriteBack با operand
+def p_instruction_writeback_with_operand(p):
+    """instruction : writeback_mnemonic operand"""
+    p[0] = Instruction(p[1], p[2])
+    if parser_debug:
+        print(f"  [REDUCE] {p[1]} + Operand → Instruction (WriteBack)")
+
+
+# ───────────────────────────────────────────────────────────────────
+# قوانین دستورات بدون Operand (فقط برای Invalidate)
+# ───────────────────────────────────────────────────────────────────
+
+# قانون 4: فقط دستورات Invalidate می‌توانند بدون operand باشند
+def p_instruction_invalidate_no_operand(p):
+    """instruction : WBINVD
+                   | INVD"""
     p[0] = Instruction(p[1])
     if parser_debug:
-        print(f"  [REDUCE] Mnemonic → Instruction (no operand)")
+        print(f"  [REDUCE] {p[1]} → Instruction (Invalidate - no operand)")
 
 
-# قانون 3: Mnemonic - دستورات Flush
-def p_mnemonic_flush(p):
-    """mnemonic : CLFLUSH
-                | CLFLUSHOPT"""
+# ───────────────────────────────────────────────────────────────────
+# تعریف Mnemonics
+# ───────────────────────────────────────────────────────────────────
+
+# قانون 5: Flush Mnemonics
+def p_flush_mnemonic(p):
+    """flush_mnemonic : CLFLUSH
+                      | CLFLUSHOPT"""
     p[0] = p[1]
     if parser_debug:
-        print(f"  [REDUCE] {p[1]} → Mnemonic (Flush)")
+        print(f"  [REDUCE] {p[1]} → FlushMnemonic")
 
 
-# قانون 4: Mnemonic - دستور Write-Back
-def p_mnemonic_writeback(p):
-    """mnemonic : CLWB"""
+# قانون 6: Prefetch Mnemonics
+def p_prefetch_mnemonic(p):
+    """prefetch_mnemonic : PREFETCHT0
+                         | PREFETCHT1
+                         | PREFETCHT2
+                         | PREFETCHNTA"""
     p[0] = p[1]
     if parser_debug:
-        print(f"  [REDUCE] {p[1]} → Mnemonic (WriteBack)")
+        print(f"  [REDUCE] {p[1]} → PrefetchMnemonic")
 
 
-# قانون 5: Mnemonic - دستورات Prefetch
-def p_mnemonic_prefetch(p):
-    """mnemonic : PREFETCHT0
-                | PREFETCHT1
-                | PREFETCHT2
-                | PREFETCHNTA"""
+# قانون 7: WriteBack Mnemonics
+def p_writeback_mnemonic(p):
+    """writeback_mnemonic : CLWB"""
     p[0] = p[1]
     if parser_debug:
-        print(f"  [REDUCE] {p[1]} → Mnemonic (Prefetch)")
+        print(f"  [REDUCE] {p[1]} → WriteBackMnemonic")
 
 
-# قانون 6: Mnemonic - دستورات Invalidate
-def p_mnemonic_invalidate(p):
-    """mnemonic : WBINVD
-                | INVD"""
-    p[0] = p[1]
-    if parser_debug:
-        print(f"  [REDUCE] {p[1]} → Mnemonic (Invalidate)")
+# ───────────────────────────────────────────────────────────────────
+# قوانین Operand
+# ───────────────────────────────────────────────────────────────────
 
-
-# قانون 7: Operand
+# قانون 8: Operand
 def p_operand(p):
     """operand : memory_address"""
     p[0] = p[1]
@@ -357,7 +375,7 @@ def p_operand(p):
         print(f"  [REDUCE] MemoryAddress → Operand")
 
 
-# قانون 8: آدرس حافظه
+# قانون 9: آدرس حافظه
 def p_memory_address(p):
     """memory_address : LBRACKET base_expr RBRACKET"""
     p[0] = p[2]
@@ -365,7 +383,7 @@ def p_memory_address(p):
         print(f"  [REDUCE] [ BaseExpr ] → MemoryAddress")
 
 
-# قانون 9: عبارت پایه با offset
+# قانون 10: عبارت پایه با offset
 def p_base_expr_register_offset(p):
     """base_expr : REGISTER offset"""
     p[0] = MemoryOperand(Register(p[1]), p[2])
@@ -373,7 +391,7 @@ def p_base_expr_register_offset(p):
         print(f"  [REDUCE] Register + Offset → BaseExpr")
 
 
-# قانون 10: عبارت پایه بدون offset (رجیستر)
+# قانون 11: عبارت پایه بدون offset (رجیستر)
 def p_base_expr_register(p):
     """base_expr : REGISTER"""
     p[0] = MemoryOperand(Register(p[1]))
@@ -381,7 +399,7 @@ def p_base_expr_register(p):
         print(f"  [REDUCE] Register → BaseExpr")
 
 
-# قانون 11: عبارت پایه بدون offset (شناسه)
+# قانون 12: عبارت پایه بدون offset (شناسه)
 def p_base_expr_identifier(p):
     """base_expr : IDENTIFIER"""
     p[0] = MemoryOperand(Identifier(p[1]))
@@ -389,7 +407,7 @@ def p_base_expr_identifier(p):
         print(f"  [REDUCE] Identifier → BaseExpr")
 
 
-# قانون 12: Offset مثبت
+# قانون 13: Offset مثبت
 def p_offset_plus(p):
     """offset : PLUS NUMBER"""
     p[0] = f"+{p[2]}"
@@ -397,7 +415,7 @@ def p_offset_plus(p):
         print(f"  [REDUCE] + NUMBER → Offset (+{p[2]})")
 
 
-# قانون 13: Offset منفی
+# قانون 14: Offset منفی
 def p_offset_minus(p):
     """offset : MINUS NUMBER"""
     p[0] = f"-{p[2]}"
@@ -425,13 +443,15 @@ def p_error(p):
      - فرمت دستور اشتباه است
      - کروشه باز یا بسته فراموش شده
      - عملوند نامعتبر
+     - دستورات CLFLUSH، CLFLUSHOPT، CLWB و PREFETCH* نیاز به operand دارند
 
   ✓ فرمت صحیح:
      MNEMONIC [REGISTER]
      MNEMONIC [REGISTER+NUMBER]
      MNEMONIC [REGISTER-NUMBER]
      MNEMONIC [IDENTIFIER]
-     MNEMONIC  (for WBINVD, INVD)
+     WBINVD  (بدون operand)
+     INVD    (بدون operand)
 """
         print(error_msg)
 
@@ -440,6 +460,8 @@ def p_error(p):
             print("  📌 پیشنهاد: رجیستر باید داخل کروشه باشد: [REGISTER]")
         elif p.type == 'NUMBER':
             print("  📌 پیشنهاد: قبل از عدد باید + یا - باشد")
+        elif p.type in ['CLFLUSH', 'CLFLUSHOPT', 'CLWB', 'PREFETCHT0', 'PREFETCHT1', 'PREFETCHT2', 'PREFETCHNTA']:
+            print(f"  📌 پیشنهاد: {p.type} نیاز به operand دارد → {p.type} [REGISTER]")
 
     else:
         print("""
@@ -627,11 +649,13 @@ if __name__ == "__main__":
         ("WBINVD", "دستور بدون operand"),
         ("CLWB [cache_line]", "دستور با شناسه"),
         ("PREFETCHNTA [RAX+128]", "رجیستر 64-bit"),
+        ("CLFLUSHOPT", "خطا - CLFLUSHOPT بدون operand"),  # باید خطا دهد
     ]
 
     print(f"\n📝 تعداد تست‌ها: {len(test_cases)}\n")
 
     success_count = 0
+    error_count = 0
 
     for i, (code, description) in enumerate(test_cases, 1):
         print(f"\n{'─' * 70}")
@@ -671,7 +695,8 @@ if __name__ == "__main__":
             success_count += 1
         else:
             print("\n❌ پارس ناموفق!")
+            error_count += 1
 
     print("\n" + "═" * 70)
-    print(f"  نتیجه: {success_count}/{len(test_cases)} تست موفق")
+    print(f"  نتیجه: {success_count} موفق، {error_count} ناموفق")
     print("═" * 70)

@@ -1,240 +1,192 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-╔══════════════════════════════════════════════════════════════════╗
-║        Cache Control Instructions Parser - Main Interface        ║
-║                     پروژه کامپایلر - گروه ۱۵                   ║
-║                   دانشگاه شهید باهنر کرمان - ۱۴۰۴               ║
-╚══════════════════════════════════════════════════════════════════╝
-
-نقطه ورود اصلی پروژه - رابط تعاملی جامع
+Cache Control Instructions Parser - Main Interface
+رابط اصلی Parser دستورات کنترل کش
+تیم 15 - پروژه کامپایلر - دانشگاه شهید باهنر کرمان
 """
 
-import sys
 import os
+import sys
 import json
 import shutil
 from pathlib import Path
-from typing import Optional
 
-
-# ═══════════════════════════════════════════════════════════════════
-# Import ماژول‌های پروژه
-# ═══════════════════════════════════════════════════════════════════
-
-def check_dependencies():
-    """بررسی وابستگی‌ها و فایل‌های لازم"""
-    try:
-        import ply
-    except ImportError:
-        print("❌ خطا: کتابخانه PLY نصب نیست!")
-        print("\n📦 لطفاً با دستور زیر نصب کنید:")
-        print("   pip install ply")
-        return False
-
-    required_files = [
-        'cache_lexer.py',
-        'cache_parser.py',
-    ]
-
-    missing_files = [f for f in required_files if not Path(f).exists()]
-
-    if missing_files:
-        print("❌ خطا: فایل‌های زیر یافت نشد:")
-        for f in missing_files:
-            print(f"   • {f}")
-        return False
-
-    return True
-
-
-if not check_dependencies():
-    sys.exit(1)
-
-# Import ماژول‌های اصلی پروژه
+# Import Parser Components
+from cache_parser import (
+    parse_instruction,
+    parse_file,
+    analyze_instruction,
+    Instruction,
+    Register,
+    Identifier
+)
 from cache_lexer import build_lexer
-from cache_parser import build_parser, parse_instruction, Register
 
 
 # ═══════════════════════════════════════════════════════════════════
-# توابع کمکی رابط کاربری
+#                          Display Functions
 # ═══════════════════════════════════════════════════════════════════
-
-def print_header(title, width=80):
-    """چاپ سرتیتر با فرمت زیبا"""
-    print("\n" + "═" * width)
-    padding = (width - len(title) - 2) // 2
-    print("║" + " " * padding + title + " " * (width - padding - len(title) - 2) + "║")
-    print("═" * width)
-
-
-def print_separator(char="─", width=80):
-    """چاپ خط جداکننده"""
-    print(char * width)
-
 
 def clear_screen():
     """پاک کردن صفحه"""
     os.system('cls' if os.name == 'nt' else 'clear')
 
 
+def print_header(title):
+    """چاپ هدر"""
+    width = 80
+    print("\n" + "═" * width)
+    print(f"║{title.center(width - 2)}║")
+    print("═" * width)
+
+
 def press_enter():
-    """توقف برای خواندن"""
+    """منتظر فشردن Enter"""
     input("\n⏎ برای ادامه Enter را فشار دهید...")
 
 
+def print_banner():
+    """نمایش بنر اولیه"""
+    clear_screen()
+    print("""
+╔════════════════════════════════════════════════════════════════╗
+║          Cache Control Instructions Parser                    ║
+║                    پروژه کامپایلر - گروه ۱۵                   ║
+║                دانشگاه شهید باهنر کرمان                       ║
+╚════════════════════════════════════════════════════════════════╝
+
+🔄 در حال بارگذاری...
+""")
+
+
+def print_main_menu():
+    """نمایش منوی اصلی"""
+    clear_screen()
+    print("""
+╔══════════════════════════════════════════════════════════════════╗
+║      Cache Control Instructions Parser - منوی اصلی              ║
+║                   پروژه کامپایلر - گروه ۱۵                     ║
+║                  دانشگاه شهید باهنر کرمان                       ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📋 قابلیت‌ها:
+
+  1️⃣   پارس یک دستور (با Parse Tree کامل)
+  2️⃣   نمایش خروجی JSON
+  3️⃣   پارس فایل Assembly
+  4️⃣   نمایش جدول LR(0)
+  5️⃣   تحلیل دستی Shift-Reduce
+  6️⃣   اجرای تست‌های خودکار
+  7️⃣   نمایش قوانین گرامر
+  8️⃣   حالت تعاملی (Interactive)
+  9️⃣   نمایش نمودار Automata
+  🔟  درباره پروژه
+
+🛠️  ابزارها:
+
+  C    پاک‌سازی فایل‌های کش
+  H    راهنما (Help)
+  Q    خروج (Quit)
+
+─────────────────────────────────────────────────────────────────
+""")
+
+
 # ═══════════════════════════════════════════════════════════════════
-# 1️⃣ پارس یک دستور
+#                          Menu Options
 # ═══════════════════════════════════════════════════════════════════
 
-def parse_single_instruction():
-    """پارس یک دستور با جزئیات کامل"""
+def option_parse_single():
+    """گزینه 1: پارس یک دستور"""
     print_header("پارس یک دستور")
 
-    print("\n📝 مثال‌های معتبر:")
-    examples = [
-        ("CLFLUSH [EAX]", "دستور ساده با رجیستر"),
-        ("CLFLUSHOPT [EBX+16]", "دستور با offset مثبت"),
-        ("PREFETCHT0 [ECX-8]", "دستور با offset منفی"),
-        ("WBINVD", "دستور بدون operand"),
-        ("CLWB [cache_line]", "دستور با label"),
-        ("PREFETCHNTA [RAX+128]", "رجیستر 64-bit"),
-        ("CLFLUSH [R8]", "رجیستر مدرن"),
-    ]
-
-    for i, (ex, desc) in enumerate(examples, 1):
-        print(f"  {i}. {ex:<30} → {desc}")
-
-    print_separator()
-    code = input("➤ دستور خود را وارد کنید (Enter برای بازگشت): ").strip()
+    code = input("\n➤ دستور: ").strip()
 
     if not code:
         return
 
     print("\n🔄 در حال پارس...")
 
-    try:
-        ast = parse_instruction(code, debug=False)
+    ast = parse_instruction(code, debug=False)
 
-        if ast:
-            print("\n✅ پارس موفق!")
-            print(f"\n📊 نمایش AST:")
-            print(f"   {ast}")
+    if ast:
+        print("\n✅ پارس موفق!\n")
+        print(f"AST: {ast}\n")
 
-            # ═══════════════════════════════════════════════════
-            # Parse Tree ساده (AST)
-            # ═══════════════════════════════════════════════════
-            print("\n🌳 Parse Tree (ساده‌شده - AST):")
-            for line in ast.pretty_print():
-                print("  " + line)
+        # Parse Tree ساده (AST)
+        print("🌳 Parse Tree (ساده‌شده - AST):")
+        for line in ast.pretty_print():
+            print("  " + line)
 
-            # ═══════════════════════════════════════════════════
-            # Parse Tree کامل طبق گرامر BNF
-            # ═══════════════════════════════════════════════════
-            print("\n🌲 Parse Tree (کامل - طبق گرامر BNF):")
-            for line in ast.full_parse_tree():
-                print("  " + line)
+        # Parse Tree کامل طبق گرامر
+        print("\n🌲 Parse Tree (کامل - طبق گرامر BNF):")
+        for line in ast.full_parse_tree():
+            print("  " + line)
 
-            # ═══════════════════════════════════════════════════
-            # مراحل اشتقاق (Derivation)
-            # ═══════════════════════════════════════════════════
-            print("\n📐 مراحل اشتقاق (Derivation):")
-            for step in ast.derivation_steps():
-                print(f"  {step}")
+        # مراحل اشتقاق
+        print("\n📐 مراحل اشتقاق (Derivation):")
+        for step in ast.derivation_steps():
+            print(f"  {step}")
 
-            # ═══════════════════════════════════════════════════
-            # تحلیل دقیق
-            # ═══════════════════════════════════════════════════
-            category = ast.get_instruction_category()
-            category_desc = {
-                'flush': 'Cache Flush - پاک‌سازی خط کش',
-                'writeback': 'Cache Write-Back - بازنویسی خط کش',
-                'prefetch': 'Cache Prefetch - پیش‌خوانی داده',
-                'invalidate': 'Cache Invalidate - باطل‌سازی کش',
-            }
+        # تحلیل
+        analysis = analyze_instruction(ast)
+        print("\n" + "═" * 70)
+        print(f"  دستور: {analysis['mnemonic']}")
+        print("═" * 70)
+        print(f"  دسته: {analysis['description']}")
+        print(f"  دارای Operand: {'✓' if analysis['has_operand'] else '✗'}")
 
-            print(f"\n🔍 تحلیل معنایی:")
-            print(f"  • Mnemonic: {ast.mnemonic}")
-            print(f"  • دسته: {category_desc.get(category, 'نامشخص')}")
-            print(f"  • دارای Operand: {'✓' if ast.operand else '✗'}")
+        if analysis['has_operand']:
+            op = analysis['operand']
+            print(f"  نوع Base: {op['base_type']}")
+            print(f"  مقدار Base: {op['base_value']}")
+            if 'register_width' in op:
+                print(f"  عرض رجیستر: {op['register_width']}-bit")
+            if op['has_offset']:
+                print(f"  Offset: {op['offset_value']}")
 
-            if ast.operand:
-                print(f"  • نوع Base: {type(ast.operand.base).__name__}")
-                print(f"  • مقدار Base: {ast.operand.base}")
-
-                if isinstance(ast.operand.base, Register):
-                    print(f"  • عرض رجیستر: {ast.operand.base.bit_width}-bit")
-
-                if ast.operand.offset:
-                    print(f"  • Offset: {ast.operand.offset}")
-
-            # ═══════════════════════════════════════════════════
-            # JSON Output (اختیاری)
-            # ═══════════════════════════════════════════════════
-            print("\n" + "─" * 80)
-            show_json = input("💡 آیا می‌خواهید JSON Output را ببینید؟ (y/n): ").lower()
-
-            if show_json == 'y':
-                print("\n📄 JSON Output:")
-                json_output = ast.to_dict()
-                print(json.dumps(json_output, indent=2, ensure_ascii=False))
-        else:
-            print("\n❌ پارس ناموفق - دستور نامعتبر است")
-
-    except Exception as e:
-        print(f"\n❌ خطا: {e}")
+        print("═" * 70)
+    else:
+        print("\n❌ پارس ناموفق!")
 
     press_enter()
 
 
-# ═══════════════════════════════════════════════════════════════════
-# 2️⃣ خروجی JSON
-# ═══════════════════════════════════════════════════════════════════
-
-def show_json_output():
-    """نمایش و ذخیره خروجی JSON"""
-    print_header("خروجی JSON")
+def option_json_output():
+    """گزینه 2: نمایش JSON"""
+    print_header("نمایش خروجی JSON")
 
     code = input("\n➤ دستور: ").strip()
+
     if not code:
         return
 
-    try:
-        ast = parse_instruction(code, debug=False)
+    print("\n🔄 در حال پارس...")
 
-        if ast:
-            print("\n📄 JSON Output:")
-            json_output = ast.to_dict()
-            json_str = json.dumps(json_output, indent=2, ensure_ascii=False)
-            print(json_str)
+    ast = parse_instruction(code, debug=False)
 
-            # پیشنهاد ذخیره
-            print_separator()
-            save = input("\n💾 ذخیره در فایل؟ (y/n): ").lower()
+    if ast:
+        print("\n📄 JSON Output:")
+        json_str = json.dumps(ast.to_dict(), indent=2, ensure_ascii=False)
+        print(json_str)
 
-            if save == 'y':
-                filename = input("نام فایل (بدون پسوند): ").strip() or "output"
+        # پرسش برای ذخیره
+        save = input("\n💾 ذخیره در فایل؟ (y/n): ").strip().lower()
+        if save == 'y':
+            filename = input("نام فایل (بدون پسوند): ").strip()
+            if filename:
                 filepath = f"{filename}.json"
-
                 with open(filepath, 'w', encoding='utf-8') as f:
-                    json.dump(json_output, f, indent=2, ensure_ascii=False)
-
-                print(f"✅ ذخیره شد: {filepath}")
-        else:
-            print("❌ دستور نامعتبر")
-
-    except Exception as e:
-        print(f"❌ خطا: {e}")
+                    f.write(json_str)
+                print(f"\n✅ ذخیره شد: {filepath}")
+    else:
+        print("\n❌ پارس ناموفق!")
 
     press_enter()
 
 
-# ═══════════════════════════════════════════════════════════════════
-# 3️⃣ پارس فایل
-# ═══════════════════════════════════════════════════════════════════
-
-def parse_assembly_file():
-    """پارس یک فایل کامل Assembly"""
+def option_parse_file():
+    """گزینه 3: پارس فایل Assembly"""
     print_header("پارس فایل Assembly")
 
     filename = input("\n➤ نام فایل: ").strip()
@@ -242,18 +194,49 @@ def parse_assembly_file():
     if not filename:
         return
 
-    if not Path(filename).exists():
+    # ─────────────────────────────────────────────────────────────
+    # جستجوی هوشمند فایل
+    # ─────────────────────────────────────────────────────────────
+
+    file_path = None
+
+    # حالت 1: فایل با مسیر کامل داده شده
+    if Path(filename).exists():
+        file_path = filename
+
+    # حالت 2: جستجو در پوشه examples/
+    elif Path(f"examples/{filename}").exists():
+        file_path = f"examples/{filename}"
+
+    # حالت 3: اگر پسوند نداشت، .asm اضافه کن و دوباره جستجو کن
+    elif not filename.endswith('.asm'):
+        # جستجو در پوشه اصلی با پسوند
+        if Path(f"{filename}.asm").exists():
+            file_path = f"{filename}.asm"
+        # جستجو در examples با پسوند
+        elif Path(f"examples/{filename}.asm").exists():
+            file_path = f"examples/{filename}.asm"
+
+    # اگر فایل پیدا نشد
+    if not file_path:
         print(f"\n❌ فایل '{filename}' پیدا نشد!")
+        print("\n💡 مکان‌های جستجو شده:")
+        print(f"   • {filename}")
+        print(f"   • examples/{filename}")
+        if not filename.endswith('.asm'):
+            print(f"   • {filename}.asm")
+            print(f"   • examples/{filename}.asm")
         press_enter()
         return
 
+    print(f"\n📁 فایل یافت شد: {file_path}")
     print("\n🔄 در حال پارس فایل...")
 
     results = []
     errors = []
 
     try:
-        with open(filename, 'r', encoding='utf-8') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             lines = f.readlines()
 
         for line_num, line in enumerate(lines, 1):
@@ -296,312 +279,288 @@ def parse_assembly_file():
                 print(f"  خط {line_num:3d}: {code}")
                 print(f"         → {error}")
 
+            if len(errors) > 5:
+                print(f"  ... و {len(errors) - 5} خطای دیگر")
+
     except Exception as e:
         print(f"❌ خطا در خواندن فایل: {e}")
 
     press_enter()
 
 
-# ═══════════════════════════════════════════════════════════════════
-# 4️⃣ جدول LR
-# ═══════════════════════════════════════════════════════════════════
-
-def show_lr_table():
-    """نمایش جدول پارس LR"""
-    print_header("جدول پارس LR(0)")
+def option_lr_table():
+    """گزینه 4: نمایش جدول LR"""
+    print_header("جدول LR(0)")
 
     try:
-        from lr_tables import generate_parsing_table
-        generate_parsing_table()
+        from lr_tables import display_lr_tables
+        display_lr_tables()
     except ImportError:
-        print("\n⚠️ فایل lr_tables.py پیدا نشد")
-        print("این فایل شامل جداول Action و Goto است.")
+        print("\n❌ ماژول lr_tables پیدا نشد!")
+        print("💡 لطفاً فایل lr_tables.py را در پوشه پروژه قرار دهید")
     except Exception as e:
         print(f"\n❌ خطا: {e}")
 
     press_enter()
 
 
-# ═══════════════════════════════════════════════════════════════════
-# 5️⃣ تحلیل Shift-Reduce
-# ═══════════════════════════════════════════════════════════════════
-
-def show_shift_reduce():
-    """نمایش تحلیل دستی Shift-Reduce"""
+def option_shift_reduce():
+    """گزینه 5: تحلیل Shift-Reduce"""
     print_header("تحلیل دستی Shift-Reduce")
 
+    code = input("\n➤ دستور: ").strip()
+
+    if not code:
+        return
+
     try:
-        from shift_reduce_trace import (
-            print_grammar_rules,
-            example1_simple,
-            example2_with_offset,
-            example3_no_operand,
-            example4_with_label
-        )
-
-        print("\n📋 انتخاب مثال:")
-        print("  1️⃣  مثال 1: CLFLUSH [EAX] - دستور ساده")
-        print("  2️⃣  مثال 2: CLFLUSHOPT [EBX+16] - با offset مثبت")
-        print("  3️⃣  مثال 3: WBINVD - بدون operand")
-        print("  4️⃣  مثال 4: CLWB [cache_line] - با label")
-        print("  5️⃣  نمایش قوانین گرامر")
-        print("  6️⃣  نمایش همه مثال‌ها")
-
-        choice = input("\n➤ انتخاب (1-6): ").strip()
-
-        examples = {
-            '1': example1_simple,
-            '2': example2_with_offset,
-            '3': example3_no_operand,
-            '4': example4_with_label,
-            '5': print_grammar_rules,
-        }
-
-        if choice == '6':
-            print_grammar_rules()
-            for func in [example1_simple, example2_with_offset,
-                         example3_no_operand, example4_with_label]:
-                func()
-        elif choice in examples:
-            examples[choice]()
-        else:
-            print("❌ انتخاب نامعتبر")
-
+        from shift_reduce_trace import trace_shift_reduce
+        trace_shift_reduce(code)
     except ImportError:
-        print("\n⚠️ فایل shift_reduce_trace.py پیدا نشد")
+        print("\n❌ ماژول shift_reduce_trace پیدا نشد!")
+        print("💡 لطفاً فایل shift_reduce_trace.py را در پوشه پروژه قرار دهید")
     except Exception as e:
         print(f"\n❌ خطا: {e}")
 
     press_enter()
 
 
-# ═══════════════════════════════════════════════════════════════════
-# 6️⃣ اجرای تست‌ها
-# ═══════════════════════════════════════════════════════════════════
-
-def run_tests():
-    """اجرای تست‌های خودکار"""
+def option_run_tests():
+    """گزینه 6: اجرای تست‌ها"""
     print_header("اجرای تست‌های خودکار")
 
-    try:
-        print("\n🧪 در حال اجرای تست‌ها...\n")
+    print("\n🧪 در حال اجرای تست‌ها...\n")
 
-        # Import و اجرای quick_test
-        import quick_test
-
-        # اجرای مستقیم
-        if hasattr(quick_test, 'main'):
-            quick_test.main()
-        else:
-            # اجرای با subprocess
-            import subprocess
-            result = subprocess.run([sys.executable, 'quick_test.py'],
-                                    capture_output=False)
-
-    except ImportError:
-        print("\n⚠️ فایل quick_test.py پیدا نشد")
-    except Exception as e:
-        print(f"\n❌ خطا: {e}")
-
-    press_enter()
-
-
-# ═══════════════════════════════════════════════════════════════════
-# 7️⃣ نمایش گرامر
-# ═══════════════════════════════════════════════════════════════════
-
-def show_grammar():
-    """نمایش قوانین گرامر BNF"""
-    print_header("قوانین گرامر BNF")
-
-    try:
-        with open('grammar.txt', 'r', encoding='utf-8') as f:
-            content = f.read()
-            print("\n" + content)
-    except FileNotFoundError:
-        print("\n⚠️ فایل grammar.txt پیدا نشد")
-
-        # نمایش گرامر از حافظه
-        print("\n📋 قوانین گرامر:")
-        grammar = """
-═══ گرامر BNF برای دستورات کنترل کش ═══
-
-<Instruction>     ::= <Mnemonic> <Operand> | <Mnemonic>
-<Mnemonic>        ::= <CacheFlush> | <CacheWrite> | <CachePrefetch> | <CacheInvalidate>
-
-<CacheFlush>      ::= "CLFLUSH" | "CLFLUSHOPT"
-<CacheWrite>      ::= "CLWB"
-<CachePrefetch>   ::= "PREFETCHT0" | "PREFETCHT1" | "PREFETCHT2" | "PREFETCHNTA"
-<CacheInvalidate> ::= "WBINVD" | "INVD"
-
-<Operand>         ::= <MemoryAddress> | ε
-<MemoryAddress>   ::= "[" <BaseExpr> "]"
-<BaseExpr>        ::= <Register> <Offset> | <Register> | <Label>
-
-<Offset>          ::= "+" <Number> | "-" <Number>
-<Register>        ::= "EAX" | "EBX" | ... | "RAX" | "RBX" | ... | "R8" | ... | "R15"
-<Number>          ::= <Digit>+
-<Label>           ::= <Identifier>
-"""
-        print(grammar)
-
-    press_enter()
-
-
-# ═══════════════════════════════════════════════════════════════════
-# 8️⃣ حالت تعاملی
-# ═══════════════════════════════════════════════════════════════════
-
-def interactive_mode():
-    """حالت تعاملی - پارس مداوم"""
-    print_header("حالت تعاملی")
-
-    print("\n🔄 حالت پارس مداوم فعال شد")
-    print("دستورات خود را وارد کنید")
-    print("دستورات کنترلی: 'exit', 'quit', 'help'\n")
-
-    counter = 1
-
-    while True:
-        try:
-            code = input(f"[{counter}] ➤ ").strip()
-
-            if code.lower() in ['exit', 'quit', 'q']:
-                print("👋 خروج از حالت تعاملی")
-                break
-
-            if code.lower() == 'help':
-                print("  دستورات کنترلی:")
-                print("    exit/quit - خروج")
-                print("    help      - راهنما")
-                print("    clear     - پاک کردن صفحه")
-                continue
-
-            if code.lower() == 'clear':
-                clear_screen()
-                continue
-
-            if not code:
-                continue
-
-            ast = parse_instruction(code, debug=False)
-
-            if ast:
-                category = ast.get_instruction_category()
-                print(f"    ✅ {ast}")
-                print(f"    📂 دسته: {category}")
-            else:
-                print("    ❌ نامعتبر")
-
-            counter += 1
-
-        except KeyboardInterrupt:
-            print("\n👋 خروج از حالت تعاملی (Ctrl+C)")
-            break
-        except Exception as e:
-            print(f"    ❌ خطا: {e}")
-
-    press_enter()
-
-
-# ═══════════════════════════════════════════════════════════════════
-# 9️⃣ نمایش Automata
-# ═══════════════════════════════════════════════════════════════════
-
-def show_automata():
-    """نمایش نمودار Automata"""
-    print_header("نمودار Automata LR(0)")
-
-    # فایل‌های احتمالی تصویر
-    possible_images = [
-        'lr0_automata.jpg',
-        'lr0_automata.png',
-        'LR0_automata.jpg',
-        'automata.jpg',
+    test_cases = [
+        ("CLFLUSH [EAX]", "دستور ساده"),
+        ("CLFLUSHOPT [EBX+16]", "با offset مثبت"),
+        ("PREFETCHT0 [ECX-8]", "با offset منفی"),
+        ("WBINVD", "بدون operand"),
+        ("CLWB [cache_line]", "با شناسه"),
+        ("PREFETCHNTA [RAX+128]", "رجیستر 64-bit"),
+        ("CLFLUSHOPT", "خطا - بدون operand"),
     ]
 
-    image_found = None
+    success = 0
+    failed = 0
 
-    # جستجوی تصویر
-    for img in possible_images:
-        if Path(img).exists():
-            image_found = img
-            break
+    for i, (code, desc) in enumerate(test_cases, 1):
+        print(f"تست {i}/{len(test_cases)}: {desc}")
+        print(f"  کد: {code}")
 
-    # نمایش وضعیت
-    if image_found:
-        print(f"\n✅ تصویر Automata پیدا شد: {image_found}")
+        ast = parse_instruction(code, debug=False)
 
-        # نمایش اطلاعات فایل
-        file_size = Path(image_found).stat().st_size / 1024  # KB
-        print(f"   📊 حجم: {file_size:.2f} KB")
+        if ast:
+            print(f"  ✅ موفق - {ast.mnemonic}")
+            success += 1
+        else:
+            print(f"  ❌ ناموفق")
+            failed += 1
+        print()
 
-        print("\n💡 برای مشاهده تصویر:")
-        print(f"   • فایل '{image_found}' را با Image Viewer باز کنید")
-
-        # پیشنهاد باز کردن خودکار
-        open_file = input("\n🖼️  آیا می‌خواهید تصویر را باز کنید؟ (y/n): ").lower()
-
-        if open_file == 'y':
-            try:
-                import platform
-                import subprocess
-
-                system = platform.system()
-
-                if system == 'Windows':
-                    os.startfile(image_found)
-                    print("✅ تصویر با برنامه پیش‌فرض باز شد")
-                elif system == 'Darwin':  # macOS
-                    subprocess.run(['open', image_found])
-                    print("✅ تصویر با برنامه پیش‌فرض باز شد")
-                else:  # Linux
-                    subprocess.run(['xdg-open', image_found])
-                    print("✅ تصویر با برنامه پیش‌فرض باز شد")
-            except Exception as e:
-                print(f"⚠️ خطا در باز کردن تصویر: {e}")
-                print(f"لطفاً فایل '{image_found}' را به صورت دستی باز کنید")
-    else:
-        print("\n⚠️ تصویر Automata پیدا نشد")
+    print("─" * 70)
+    print(f"نتیجه: {success} موفق، {failed} ناموفق")
+    print("─" * 70)
 
     press_enter()
 
 
-# ═══════════════════════════════════════════════════════════════════
-# 🔟 پاک‌سازی کش
-# ═══════════════════════════════════════════════════════════════════
+def option_show_grammar():
+    """گزینه 7: نمایش گرامر"""
+    print_header("قوانین گرامر")
 
-def clean_cache_files():
-    """پاک‌سازی فایل‌های کش PLY"""
+    grammar = """
+╔══════════════════════════════════════════════════════════════════╗
+║                       Grammar Rules (BNF)                        ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📜 قوانین اصلی:
+
+  1. Instruction → FlushMnemonic Operand
+  2. Instruction → PrefetchMnemonic Operand
+  3. Instruction → WriteBackMnemonic Operand
+  4. Instruction → WBINVD
+  5. Instruction → INVD
+
+📝 Mnemonics:
+
+  6. FlushMnemonic → CLFLUSH | CLFLUSHOPT
+  7. PrefetchMnemonic → PREFETCHT0 | PREFETCHT1 | PREFETCHT2 | PREFETCHNTA
+  8. WriteBackMnemonic → CLWB
+
+🎯 Operands:
+
+  9. Operand → MemoryAddress
+ 10. MemoryAddress → [ BaseExpr ]
+ 11. BaseExpr → Register Offset
+ 12. BaseExpr → Register
+ 13. BaseExpr → Identifier
+
+🔢 Offset:
+
+ 14. Offset → + NUMBER
+ 15. Offset → - NUMBER
+
+═══════════════════════════════════════════════════════════════════
+
+💡 توضیحات:
+
+  • دستورات Flush، Prefetch و WriteBack همیشه نیاز به Operand دارند
+  • فقط WBINVD و INVD می‌توانند بدون Operand باشند
+  • Operand می‌تواند رجیستر یا شناسه (label) باشد
+  • Offset اختیاری است و می‌تواند مثبت (+) یا منفی (-) باشد
+
+═══════════════════════════════════════════════════════════════════
+"""
+
+    print(grammar)
+    press_enter()
+
+
+def option_interactive():
+    """گزینه 8: حالت تعاملی"""
+    print_header("حالت تعاملی (Interactive)")
+
+    print("""
+💡 در این حالت می‌توانید دستورات مختلف را به‌صورت پشت‌سر‌هم تست کنید
+   برای خروج 'exit' یا 'q' را وارد کنید
+""")
+
+    while True:
+        code = input("\n➤ دستور: ").strip()
+
+        if code.lower() in ['exit', 'q', 'quit']:
+            print("👋 خروج از حالت تعاملی")
+            break
+
+        if not code:
+            continue
+
+        ast = parse_instruction(code, debug=False)
+
+        if ast:
+            print(f"✅ {ast.mnemonic} - دسته: {ast.get_instruction_category()}")
+            if ast.operand:
+                print(f"   Operand: {ast.operand}")
+        else:
+            print("❌ پارس ناموفق")
+
+    press_enter()
+
+
+def option_show_automata():
+    """گزینه 9: نمایش Automata"""
+    print_header("نمودار Automata")
+
+    print("\n🔍 جستجوی فایل‌های نمودار...\n")
+
+    automata_files = [
+        "lr0_automata.jpg",
+        "lr0_automata.png",
+        "lr0_automata.pdf",
+        "lr0_automata"
+    ]
+
+    found = False
+    for filename in automata_files:
+        if Path(filename).exists():
+            print(f"✅ فایل پیدا شد: {filename}")
+
+            # باز کردن فایل
+            if os.name == 'nt':  # Windows
+                os.startfile(filename)
+            elif sys.platform == 'darwin':  # macOS
+                os.system(f'open "{filename}"')
+            else:  # Linux
+                os.system(f'xdg-open "{filename}"')
+
+            print(f"📂 فایل در پنجره جدید باز شد")
+            found = True
+            break
+
+    if not found:
+        print("❌ فایل نمودار پیدا نشد!")
+        print("\n💡 فایل‌های قابل قبول:")
+        for f in automata_files:
+            print(f"   • {f}")
+
+    press_enter()
+
+
+def option_about():
+    """گزینه 10: درباره"""
+    print_header("درباره پروژه")
+
+    about = """
+╔══════════════════════════════════════════════════════════════════╗
+║         Cache Control Instructions Parser                        ║
+║                 تحلیل‌گر دستورات کنترل کش                       ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📚 پروژه: کامپایلر
+🎓 دانشگاه: شهید باهنر کرمان
+👥 گروه: 15
+📅 ترم: زمستان ۱۴۰۴
+
+═══════════════════════════════════════════════════════════════════
+
+🎯 هدف پروژه:
+
+  طراحی و پیاده‌سازی یک Parser کامل برای دستورات کنترل کش در
+  معماری x86/x64 با استفاده از تکنیک‌های Bottom-Up Parsing
+
+═══════════════════════════════════════════════════════════════════
+
+⚙️  ویژگی‌ها:
+
+  ✓ پشتیبانی از دستورات CLFLUSH، CLFLUSHOPT، CLWB
+  ✓ پشتیبانی از دستورات PREFETCH (T0, T1, T2, NTA)
+  ✓ پشتیبانی از دستورات WBINVD و INVD
+  ✓ LR(0) Parser با جدول اکشن و گوتو
+  ✓ تحلیل Shift-Reduce گام‌به‌گام
+  ✓ ساخت Abstract Syntax Tree (AST)
+  ✓ خروجی JSON
+  ✓ مدیریت خطاهای نحوی
+  ✓ پشتیبانی از رجیسترهای 32 و 64 بیتی
+
+═══════════════════════════════════════════════════════════════════
+
+🛠️  تکنولوژی‌ها:
+
+  • زبان: Python 3
+  • ابزار Lexer: PLY (Python Lex-Yacc)
+  • ابزار Parser: PLY Yacc
+  • روش: LR(0) Bottom-Up Parsing
+
+═══════════════════════════════════════════════════════════════════
+"""
+
+    print(about)
+    press_enter()
+
+
+def option_clean_cache():
+    """پاک‌سازی کش"""
     print_header("پاک‌سازی فایل‌های کش")
-
-    files_to_remove = ['parser.out', 'parsetab.py', 'lextab.py']
-    dirs_to_remove = ['__pycache__']
-
-    removed = 0
 
     print("\n🧹 در حال پاک‌سازی...\n")
 
-    for filename in files_to_remove:
-        if Path(filename).exists():
-            try:
-                os.remove(filename)
-                print(f"✅ حذف شد: {filename}")
-                removed += 1
-            except Exception as e:
-                print(f"❌ خطا در حذف {filename}: {e}")
+    cache_items = ['__pycache__', 'parser.out', 'parsetab.py']
+    removed = 0
 
-    for dirname in dirs_to_remove:
-        if Path(dirname).exists():
-            try:
-                shutil.rmtree(dirname)
-                print(f"✅ حذف شد: {dirname}/")
-                removed += 1
-            except Exception as e:
-                print(f"❌ خطا در حذف {dirname}: {e}")
+    for item in cache_items:
+        path = Path(item)
+        if path.exists():
+            if path.is_dir():
+                shutil.rmtree(path)
+                print(f"✅ حذف شد: {item}/")
+            else:
+                path.unlink()
+                print(f"✅ حذف شد: {item}")
+            removed += 1
 
     if removed == 0:
-        print("✅ فایل کش‌ی یافت نشد - همه چیز تمیز است!")
+        print("💡 فایل کشی برای پاک‌سازی یافت نشد")
     else:
         print(f"\n✅ تعداد {removed} مورد حذف شد")
         print("💡 در اجرای بعدی، فایل‌ها دوباره ساخته می‌شوند")
@@ -609,249 +568,134 @@ def clean_cache_files():
     press_enter()
 
 
-# ═══════════════════════════════════════════════════════════════════
-# 1️⃣1️⃣ درباره پروژه
-# ═══════════════════════════════════════════════════════════════════
-
-def show_about():
-    """نمایش اطلاعات پروژه"""
-    print_header("درباره پروژه")
-
-    about_text = """
-╔══════════════════════════════════════════════════════════════════╗
-║          Cache Control Instructions Parser & Compiler            ║
-╚══════════════════════════════════════════════════════════════════╝
-
-📚 پروژه: تحلیل و کامپایل دستورات کنترل حافظه نهان (Cache)
-🎓 درس: کامپایلر (Compiler Design)
-👥 گروه: ۱۵
-🏛️  دانشگاه: شهید باهنر کرمان (Shahid Bahonar University of Kerman)
-📅 ترم: زمستان ۱۴۰۴ (Winter 2026)
-
-─────────────────────────────────────────────────────────────────
-
-✨ ویژگی‌ها:
-  • پشتیبانی از 9 دستور Cache Control x86/x64
-  • تحلیلگر واژگانی (Lexer) با PLY
-  • تحلیلگر نحوی (Parser) - LALR(1)
-  • درخت نحوی انتزاعی (AST) - 4 کلاس
-  • Parse Tree کامل طبق گرامر BNF
-  • مراحل اشتقاق (Derivation)
-  • خروجی JSON برای یکپارچگی
-  • جدول LR(0) کامل - 14 State
-  • نمودار Automata با Graphviz
-  • تحلیل Shift-Reduce دستی - 4 مثال
-  • تست خودکار - Coverage 100%
-  • مستندات کامل فارسی/انگلیسی
-
-─────────────────────────────────────────────────────────────────
-
-🎯 دستورات پشتیبانی شده:
-  Cache Flush      → CLFLUSH, CLFLUSHOPT
-  Cache Write-Back → CLWB
-  Cache Prefetch   → PREFETCHT0, PREFETCHT1, PREFETCHT2, PREFETCHNTA
-  Cache Invalidate → WBINVD, INVD
-
-─────────────────────────────────────────────────────────────────
-
-🔧 تکنولوژی‌ها:
-  • Python 3.8+
-  • PLY (Python Lex-Yacc) 3.11
-  • Graphviz (برای نمودارها)
-
-─────────────────────────────────────────────────────────────────
-
-📖 مستندات:
-  • README.md - راهنمای اصلی
-  • PARSER_USAGE_GUIDE.txt - راهنمای استفاده
-  • PARSER_SUMMARY.txt - خلاصه پروژه
-  • SHIFT_REDUCE_ANALYSIS.txt - تحلیل دستی
-  • document.docx - گزارش نهایی
-
-─────────────────────────────────────────────────────────────────
-
-📊 آمار پروژه:
-  • خطوط کد: ~3,500+
-  • فایل‌های Python: 7
-  • تست‌ها: 6 (همه موفق)
-  • مستندات: 5 فایل
-
-─────────────────────────────────────────────────────────────────
-
-© ۱۴۰۴ - گروه ۱۵ - دانشگاه شهید باهنر کرمان
-Developed with ❤️ for Compiler Course
-"""
-    print(about_text)
-    press_enter()
-
-
-# ═══════════════════════════════════════════════════════════════════
-# منوی اصلی
-# ═══════════════════════════════════════════════════════════════════
-
-def show_menu():
-    """نمایش منوی اصلی"""
-    menu = """
-╔══════════════════════════════════════════════════════════════════╗
-║      Cache Control Instructions Parser - منوی اصلی              ║
-║                   پروژه کامپایلر - گروه ۱۵                     ║
-║                  دانشگاه شهید باهنر کرمان                       ║
-╚══════════════════════════════════════════════════════════════════╝
-
-📋 قابلیت‌ها:
-
-  1️⃣   پارس یک دستور (با Parse Tree کامل)
-  2️⃣   نمایش خروجی JSON
-  3️⃣   پارس فایل Assembly
-  4️⃣   نمایش جدول LR(0)
-  5️⃣   تحلیل دستی Shift-Reduce
-  6️⃣   اجرای تست‌های خودکار
-  7️⃣   نمایش قوانین گرامر
-  8️⃣   حالت تعاملی (Interactive)
-  9️⃣   نمایش نمودار Automata
-  🔟  درباره پروژه
-
-🛠️  ابزارها:
-
-  C    پاک‌سازی فایل‌های کش
-  H    راهنما (Help)
-  Q    خروج (Quit)
-
-─────────────────────────────────────────────────────────────────
-"""
-    print(menu)
-
-
-def show_help():
-    """نمایش راهنما"""
-    print_header("راهنمای استفاده")
+def option_help():
+    """راهنما"""
+    print_header("راهنما")
 
     help_text = """
-📘 راهنمای سریع:
+📖 راهنمای استفاده:
 
-🔹 پارس یک دستور:
-   مثال: CLFLUSH [EAX]
+1️⃣  پارس یک دستور:
+   - یک دستور assembly وارد کنید
+   - Parse Tree و تحلیل کامل نمایش داده می‌شود
 
-🔹 فرمت‌های معتبر:
-   • MNEMONIC [REGISTER]
-   • MNEMONIC [REGISTER+NUMBER]
-   • MNEMONIC [REGISTER-NUMBER]
-   • MNEMONIC [IDENTIFIER]
-   • MNEMONIC (برای WBINVD و INVD)
+2️⃣  نمایش JSON:
+   - خروجی JSON برای یک دستور
+   - امکان ذخیره در فایل
 
-🔹 رجیسترهای پشتیبانی شده:
-   • 32-bit: EAX, EBX, ECX, EDX, ESI, EDI, EBP, ESP
-   • 64-bit: RAX, RBX, RCX, RDX, RSI, RDI, RBP, RSP
-   • مدرن: R8-R15 (با پسوندهای B/W/D/L)
+3️⃣  پارس فایل:
+   - نام فایل assembly را وارد کنید
+   - فایل باید در پوشه examples/ باشد
+   - یا مسیر کامل را وارد کنید
 
-🔹 دستورات:
-   • CLFLUSH, CLFLUSHOPT - پاک‌سازی کش
-   • CLWB - بازنویسی کش
-   • PREFETCHT0/T1/T2/NTA - پیش‌خوانی
-   • WBINVD, INVD - باطل‌سازی کش
+4️⃣  جدول LR:
+   - نمایش جدول Action و Goto
+   - مشاهده حالات Automata
 
-🔹 نکات:
-   • کامنت‌ها با ; شروع می‌شوند
-   • فاصله (space) بین tokens الزامی نیست
-   • حروف بزرگ/کوچک مهم است (case-sensitive)
+5️⃣  تحلیل Shift-Reduce:
+   - مشاهده مراحل پارسینگ گام‌به‌گام
+   - Stack و Input در هر مرحله
+
+═══════════════════════════════════════════════════════════════════
+
+💡 نکات:
+
+  • فایل‌های assembly باید پسوند .asm داشته باشند
+  • کامنت‌ها با ; شروع می‌شوند
+  • فرمت دستورات باید دقیق باشد
+
+═══════════════════════════════════════════════════════════════════
 """
+
     print(help_text)
     press_enter()
 
 
 # ═══════════════════════════════════════════════════════════════════
-# تابع اصلی
+#                          Main Loop
 # ═══════════════════════════════════════════════════════════════════
 
 def main():
-    """تابع اصلی برنامه"""
+    """حلقه اصلی برنامه"""
 
-    # بنر خوش‌آمدگویی
-    clear_screen()
-    print("\n" + "╔" + "═" * 64 + "╗")
-    print("║" + " " * 10 + "Cache Control Instructions Parser" + " " * 20 + "║")
-    print("║" + " " * 20 + "پروژه کامپایلر - گروه ۱۵" + " " * 19 + "║")
-    print("║" + " " * 16 + "دانشگاه شهید باهنر کرمان" + " " * 23 + "║")
-    print("╚" + "═" * 64 + "╝\n")
+    # نمایش بنر
+    print_banner()
 
-    print("🔄 در حال بارگذاری...\n")
-
-    # ساخت Lexer و Parser
+    # تست اولیه parser
     try:
-        lexer = build_lexer()
-        parser = build_parser()
-        print("✅ Parser آماده است!")
+        test_ast = parse_instruction("CLFLUSH [EAX]", debug=False)
+        if test_ast:
+            print("✅ Parser آماده است!")
+        else:
+            print("⚠️  Parser ساخته شد اما تست اولیه ناموفق بود")
     except Exception as e:
-        print(f"❌ خطا در بارگذاری: {e}")
+        print(f"❌ خطا در بارگذاری Parser: {e}")
         sys.exit(1)
 
-    input("\n⏎ برای شروع Enter را فشار دهید...")
+    press_enter()
 
-    # حلقه اصلی برنامه
+    # حلقه اصلی
     while True:
-        clear_screen()
-        show_menu()
+        print_main_menu()
 
         choice = input("➤ انتخاب شما: ").strip().lower()
 
-        try:
-            if choice == '1':
-                parse_single_instruction()
-            elif choice == '2':
-                show_json_output()
-            elif choice == '3':
-                parse_assembly_file()
-            elif choice == '4':
-                show_lr_table()
-            elif choice == '5':
-                show_shift_reduce()
-            elif choice == '6':
-                run_tests()
-            elif choice == '7':
-                show_grammar()
-            elif choice == '8':
-                interactive_mode()
-            elif choice == '9':
-                show_automata()
-            elif choice in ['10', '0']:
-                show_about()
-            elif choice == 'c':
-                clean_cache_files()
-            elif choice == 'h':
-                show_help()
-            elif choice == 'q':
-                print("\n" + "═" * 80)
-                print("👋 خروج از برنامه - موفق باشید!")
-                print("📍 دانشگاه شهید باهنر کرمان")
-                print("═" * 80 + "\n")
-                sys.exit(0)
-            else:
-                print("\n❌ انتخاب نامعتبر! لطفاً یک گزینه معتبر وارد کنید.")
-                press_enter()
+        if choice == '1':
+            option_parse_single()
+        elif choice == '2':
+            option_json_output()
+        elif choice == '3':
+            option_parse_file()
+        elif choice == '4':
+            option_lr_table()
+        elif choice == '5':
+            option_shift_reduce()
+        elif choice == '6':
+            option_run_tests()
+        elif choice == '7':
+            option_show_grammar()
+        elif choice == '8':
+            option_interactive()
+        elif choice == '9':
+            option_show_automata()
+        elif choice == '10':
+            option_about()
+        elif choice == 'c':
+            option_clean_cache()
+        elif choice == 'h':
+            option_help()
+        elif choice in ['q', 'quit', 'exit']:
+            clear_screen()
+            print("""
+╔══════════════════════════════════════════════════════════════════╗
+║                        خروج از برنامه                           ║
+╚══════════════════════════════════════════════════════════════════╝
 
-        except KeyboardInterrupt:
-            print("\n\n⚠️  عملیات لغو شد (Ctrl+C)")
-            press_enter()
-        except Exception as e:
-            print(f"\n❌ خطای غیرمنتظره: {e}")
-            import traceback
-            traceback.print_exc()
+            👋 با تشکر از استفاده شما
+
+            دانشگاه شهید باهنر کرمان
+            تیم 15 - پروژه کامپایلر
+
+╔══════════════════════════════════════════════════════════════════╗
+""")
+            sys.exit(0)
+        else:
+            print("\n❌ گزینه نامعتبر! لطفاً دوباره تلاش کنید.")
             press_enter()
 
 
 # ═══════════════════════════════════════════════════════════════════
-# نقطه ورود برنامه
+#                          Entry Point
 # ═══════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n\n⚠️  برنامه توسط کاربر متوقف شد (Ctrl+C)")
-        print("👋 خداحافظ!\n")
+        print("\n\n👋 خروج با Ctrl+C")
         sys.exit(0)
     except Exception as e:
-        print(f"\n❌ خطای کلی: {e}")
+        print(f"\n❌ خطای غیرمنتظره: {e}")
         import traceback
 
         traceback.print_exc()
