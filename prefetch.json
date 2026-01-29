@@ -1,0 +1,15 @@
+{
+  "type": "Instruction",
+  "mnemonic": "PREFETCHT0",
+  "operand": {
+    "type": "MemoryOperand",
+    "base": {
+      "type": "Register",
+      "name": "RCX",
+      "bit_width": 64
+    },
+    "offset": "-8",
+    "has_offset": true
+  },
+  "has_operand": true
+}

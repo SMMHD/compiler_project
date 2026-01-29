@@ -53,7 +53,7 @@ if not check_dependencies():
 
 # Import ماژول‌های اصلی پروژه
 from cache_lexer import build_lexer
-from cache_parser import build_parser, parse_instruction
+from cache_parser import build_parser, parse_instruction, Register
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -118,14 +118,33 @@ def parse_single_instruction():
 
         if ast:
             print("\n✅ پارس موفق!")
-            print(f"\n📊 نتیجه: {ast}")
+            print(f"\n📊 نمایش AST:")
+            print(f"   {ast}")
 
-            # نمایش Parse Tree
-            print("\n🌳 Parse Tree:")
+            # ═══════════════════════════════════════════════════
+            # Parse Tree ساده (AST)
+            # ═══════════════════════════════════════════════════
+            print("\n🌳 Parse Tree (ساده‌شده - AST):")
             for line in ast.pretty_print():
                 print("  " + line)
 
-            # دسته‌بندی دستور
+            # ═══════════════════════════════════════════════════
+            # Parse Tree کامل طبق گرامر BNF
+            # ═══════════════════════════════════════════════════
+            print("\n🌲 Parse Tree (کامل - طبق گرامر BNF):")
+            for line in ast.full_parse_tree():
+                print("  " + line)
+
+            # ═══════════════════════════════════════════════════
+            # مراحل اشتقاق (Derivation)
+            # ═══════════════════════════════════════════════════
+            print("\n📐 مراحل اشتقاق (Derivation):")
+            for step in ast.derivation_steps():
+                print(f"  {step}")
+
+            # ═══════════════════════════════════════════════════
+            # تحلیل دقیق
+            # ═══════════════════════════════════════════════════
             category = ast.get_instruction_category()
             category_desc = {
                 'flush': 'Cache Flush - پاک‌سازی خط کش',
@@ -134,7 +153,7 @@ def parse_single_instruction():
                 'invalidate': 'Cache Invalidate - باطل‌سازی کش',
             }
 
-            print(f"\n🔍 تحلیل:")
+            print(f"\n🔍 تحلیل معنایی:")
             print(f"  • Mnemonic: {ast.mnemonic}")
             print(f"  • دسته: {category_desc.get(category, 'نامشخص')}")
             print(f"  • دارای Operand: {'✓' if ast.operand else '✗'}")
@@ -142,8 +161,23 @@ def parse_single_instruction():
             if ast.operand:
                 print(f"  • نوع Base: {type(ast.operand.base).__name__}")
                 print(f"  • مقدار Base: {ast.operand.base}")
+
+                if isinstance(ast.operand.base, Register):
+                    print(f"  • عرض رجیستر: {ast.operand.base.bit_width}-bit")
+
                 if ast.operand.offset:
                     print(f"  • Offset: {ast.operand.offset}")
+
+            # ═══════════════════════════════════════════════════
+            # JSON Output (اختیاری)
+            # ═══════════════════════════════════════════════════
+            print("\n" + "─" * 80)
+            show_json = input("💡 آیا می‌خواهید JSON Output را ببینید؟ (y/n): ").lower()
+
+            if show_json == 'y':
+                print("\n📄 JSON Output:")
+                json_output = ast.to_dict()
+                print(json.dumps(json_output, indent=2, ensure_ascii=False))
         else:
             print("\n❌ پارس ناموفق - دستور نامعتبر است")
 
@@ -228,6 +262,10 @@ def parse_assembly_file():
             # رد کردن خطوط خالی و کامنت
             if not code or code.startswith(';'):
                 continue
+
+            # حذف کامنت انتهای خط
+            if ';' in code:
+                code = code.split(';')[0].strip()
 
             try:
                 ast = parse_instruction(code, debug=False)
@@ -474,30 +512,57 @@ def show_automata():
     """نمایش نمودار Automata"""
     print_header("نمودار Automata LR(0)")
 
-    # چک کردن تصویر
-    if Path('lr0_automata.jpg').exists():
-        print("\n✅ تصویر Automata موجود است: lr0_automata.jpg")
+    # فایل‌های احتمالی تصویر
+    possible_images = [
+        'lr0_automata.jpg',
+        'lr0_automata.png',
+        'LR0_automata.jpg',
+        'automata.jpg',
+    ]
+
+    image_found = None
+
+    # جستجوی تصویر
+    for img in possible_images:
+        if Path(img).exists():
+            image_found = img
+            break
+
+    # نمایش وضعیت
+    if image_found:
+        print(f"\n✅ تصویر Automata پیدا شد: {image_found}")
+
+        # نمایش اطلاعات فایل
+        file_size = Path(image_found).stat().st_size / 1024  # KB
+        print(f"   📊 حجم: {file_size:.2f} KB")
+
         print("\n💡 برای مشاهده تصویر:")
-        print("   • فایل lr0_automata.jpg را باز کنید")
-        print("   • یا با یک Image Viewer مشاهده کنید")
-    else:
-        print("\n⚠️ تصویر lr0_automata.jpg پیدا نشد")
+        print(f"   • فایل '{image_found}' را با Image Viewer باز کنید")
 
-    # بررسی draw_automata.py
-    if Path('draw_automata.py').exists():
-        print("\n📊 فایل draw_automata.py موجود است")
-        regenerate = input("\n🔄 آیا می‌خواهید نمودار را دوباره بسازید؟ (y/n): ").lower()
+        # پیشنهاد باز کردن خودکار
+        open_file = input("\n🖼️  آیا می‌خواهید تصویر را باز کنید؟ (y/n): ").lower()
 
-        if regenerate == 'y':
+        if open_file == 'y':
             try:
+                import platform
                 import subprocess
-                result = subprocess.run([sys.executable, 'draw_automata.py'])
-                if result.returncode == 0:
-                    print("✅ نمودار با موفقیت ساخته شد!")
-                else:
-                    print("⚠️ ممکن است Graphviz نصب نباشد")
+
+                system = platform.system()
+
+                if system == 'Windows':
+                    os.startfile(image_found)
+                    print("✅ تصویر با برنامه پیش‌فرض باز شد")
+                elif system == 'Darwin':  # macOS
+                    subprocess.run(['open', image_found])
+                    print("✅ تصویر با برنامه پیش‌فرض باز شد")
+                else:  # Linux
+                    subprocess.run(['xdg-open', image_found])
+                    print("✅ تصویر با برنامه پیش‌فرض باز شد")
             except Exception as e:
-                print(f"❌ خطا: {e}")
+                print(f"⚠️ خطا در باز کردن تصویر: {e}")
+                print(f"لطفاً فایل '{image_found}' را به صورت دستی باز کنید")
+    else:
+        print("\n⚠️ تصویر Automata پیدا نشد")
 
     press_enter()
 
@@ -570,6 +635,8 @@ def show_about():
   • تحلیلگر واژگانی (Lexer) با PLY
   • تحلیلگر نحوی (Parser) - LALR(1)
   • درخت نحوی انتزاعی (AST) - 4 کلاس
+  • Parse Tree کامل طبق گرامر BNF
+  • مراحل اشتقاق (Derivation)
   • خروجی JSON برای یکپارچگی
   • جدول LR(0) کامل - 14 State
   • نمودار Automata با Graphviz
@@ -604,7 +671,7 @@ def show_about():
 ─────────────────────────────────────────────────────────────────
 
 📊 آمار پروژه:
-  • خطوط کد: ~3,000+
+  • خطوط کد: ~3,500+
   • فایل‌های Python: 7
   • تست‌ها: 6 (همه موفق)
   • مستندات: 5 فایل
@@ -633,7 +700,7 @@ def show_menu():
 
 📋 قابلیت‌ها:
 
-  1️⃣   پارس یک دستور
+  1️⃣   پارس یک دستور (با Parse Tree کامل)
   2️⃣   نمایش خروجی JSON
   3️⃣   پارس فایل Assembly
   4️⃣   نمایش جدول LR(0)

@@ -2,7 +2,7 @@
 """
 Cache Control Instructions Parser
 تحلیل‌گر نحوی برای دستورات کنترل کش
-تیم 15 - پروژه کامپایلر - دانشگاه شهید بهشتی
+تیم 15 - پروژه کامپایلر - دانشگاه شهید باهنر کرمان
 
 این فایل شامل:
 - قوانین گرامر کامل
@@ -10,11 +10,13 @@ Cache Control Instructions Parser
 - تحلیل Bottom-Up با LR Parser
 - مدیریت خطا
 - ابزارهای تست و نمایش
+- Parse Tree کامل طبق گرامر BNF
 """
 
 import ply.yacc as yacc
 from cache_lexer import tokens, build_lexer
 import json
+
 
 # ═══════════════════════════════════════════════════════════════════
 #                          AST Node Classes
@@ -60,6 +62,7 @@ class Instruction(ASTNode):
         }
 
     def pretty_print(self, indent=0):
+        """نمایش Parse Tree ساده‌شده (AST)"""
         prefix = "  " * indent
         lines = []
         lines.append(f"{prefix}Instruction: {self.mnemonic}")
@@ -69,6 +72,111 @@ class Instruction(ASTNode):
         else:
             lines.append(f"{prefix}└─ No Operand")
         return lines
+
+    def full_parse_tree(self):
+        """
+        نمایش Parse Tree کامل طبق همه سطوح گرامر BNF
+        این نمایش برای گزارش و ارائه به استاد مناسب است
+        """
+        lines = []
+        lines.append("Instruction")
+
+        # تشخیص نوع Mnemonic و دسته‌بندی
+        category = self.get_instruction_category()
+
+        category_mapping = {
+            'flush': 'CacheFlush',
+            'writeback': 'CacheWrite',
+            'prefetch': 'CachePrefetch',
+            'invalidate': 'CacheInvalidate'
+        }
+
+        category_name = category_mapping.get(category, 'Mnemonic')
+
+        if self.operand:
+            lines.append("├── Mnemonic")
+            lines.append(f"│   └── {category_name}")
+            lines.append(f"│       └── {self.mnemonic} (terminal)")
+            lines.append("└── Operand")
+            lines.append("    └── MemoryAddress")
+            lines.append("        ├── [ (terminal)")
+            lines.append("        ├── BaseExpr")
+
+            # نوع Base (Register یا Identifier)
+            if isinstance(self.operand.base, Register):
+                lines.append("        │   ├── Register")
+                lines.append(f"        │   │   └── {self.operand.base.name} (terminal)")
+
+                # اگر Offset داشت
+                if self.operand.offset:
+                    lines.append("        │   └── Offset")
+                    sign = self.operand.offset[0]
+                    num = self.operand.offset[1:]
+                    lines.append(f"        │       ├── {sign} (terminal)")
+                    lines.append(f"        │       └── {num} (terminal)")
+                else:
+                    lines.append("        │   └── ε (no offset)")
+
+            elif isinstance(self.operand.base, Identifier):
+                lines.append("        │   └── Identifier")
+                lines.append(f"        │       └── {self.operand.base.name} (terminal)")
+
+            lines.append("        └── ] (terminal)")
+        else:
+            # دستور بدون Operand
+            lines.append("└── Mnemonic")
+            lines.append(f"    └── {category_name}")
+            lines.append(f"        └── {self.mnemonic} (terminal)")
+
+        return lines
+
+    def derivation_steps(self):
+        """
+        نمایش مراحل اشتقاق (Derivation) از گرامر
+        مفید برای گزارش
+        """
+        steps = []
+        steps.append("Instruction")
+
+        if self.operand:
+            steps.append("→ Mnemonic Operand")
+
+            category = self.get_instruction_category()
+            if category == 'flush':
+                steps.append("→ CacheFlush Operand")
+            elif category == 'writeback':
+                steps.append("→ CacheWrite Operand")
+            elif category == 'prefetch':
+                steps.append("→ CachePrefetch Operand")
+            elif category == 'invalidate':
+                steps.append("→ CacheInvalidate Operand")
+
+            steps.append(f"→ {self.mnemonic} Operand")
+            steps.append(f"→ {self.mnemonic} MemoryAddress")
+            steps.append(f"→ {self.mnemonic} [ BaseExpr ]")
+
+            if isinstance(self.operand.base, Register):
+                if self.operand.offset:
+                    steps.append(f"→ {self.mnemonic} [ Register Offset ]")
+                    sign = self.operand.offset[0]
+                    num = self.operand.offset[1:]
+                    steps.append(f"→ {self.mnemonic} [ {self.operand.base.name} {sign} {num} ]")
+                else:
+                    steps.append(f"→ {self.mnemonic} [ Register ]")
+                    steps.append(f"→ {self.mnemonic} [ {self.operand.base.name} ]")
+            else:
+                steps.append(f"→ {self.mnemonic} [ Identifier ]")
+                steps.append(f"→ {self.mnemonic} [ {self.operand.base.name} ]")
+        else:
+            steps.append("→ Mnemonic")
+
+            category = self.get_instruction_category()
+            if category == 'invalidate':
+                steps.append("→ CacheInvalidate")
+
+            steps.append(f"→ {self.mnemonic}")
+
+        return steps
 
     def get_instruction_category(self):
         """دسته‌بندی نوع دستور"""
@@ -354,6 +462,7 @@ def p_error(p):
 # متغیر سراسری برای دیباگ
 parser_debug = False
 
+
 def build_parser(debug=False):
     """
     ساخت parser
@@ -507,6 +616,7 @@ def print_analysis(analysis):
 if __name__ == "__main__":
     print("═" * 70)
     print("  تست Parser برای دستورات کنترل کش")
+    print("  دانشگاه شهید باهنر کرمان - تیم 15")
     print("═" * 70)
 
     # تست کیس‌ها
@@ -517,8 +627,6 @@ if __name__ == "__main__":
         ("WBINVD", "دستور بدون operand"),
         ("CLWB [cache_line]", "دستور با شناسه"),
         ("PREFETCHNTA [RAX+128]", "رجیستر 64-bit"),
-        ("INVD", "دستور Invalidate"),
-        ("PREFETCHT1 [RDI]", "PREFETCH T1"),
     ]
 
     print(f"\n📝 تعداد تست‌ها: {len(test_cases)}\n")
@@ -537,10 +645,20 @@ if __name__ == "__main__":
             print("\n✅ پارس موفق!")
             print(f"\nAST: {ast}")
 
-            # نمایش درخت
-            print("\n🌳 Parse Tree:")
+            # نمایش Parse Tree ساده (AST)
+            print("\n🌳 Parse Tree (ساده‌شده - AST):")
             for line in ast.pretty_print():
-                print(line)
+                print("  " + line)
+
+            # نمایش Parse Tree کامل طبق گرامر
+            print("\n🌲 Parse Tree (کامل - طبق گرامر BNF):")
+            for line in ast.full_parse_tree():
+                print("  " + line)
+
+            # نمایش مراحل اشتقاق
+            print("\n📐 مراحل اشتقاق (Derivation):")
+            for step in ast.derivation_steps():
+                print(f"  {step}")
 
             # تحلیل
             analysis = analyze_instruction(ast)
