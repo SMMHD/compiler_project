@@ -1,4 +1,38 @@
 #!/usr/bin/env python3
+# !/usr/bin/env python3
+import os
+import shutil
+import sys
+
+
+# ═════════════════════════════════════════════════════════════════════
+# پاک‌سازی خودکار Cache در هر اجرا
+# ═════════════════════════════════════════════════════════════════════
+
+def clear_cache():
+    """پاک کردن فایل‌های cache"""
+    try:
+        # پاک کردن __pycache__
+        if os.path.exists('__pycache__'):
+            shutil.rmtree('__pycache__')
+
+        # پاک کردن parser.out
+        if os.path.exists('parser.out'):
+            os.remove('parser.out')
+
+        # پاک کردن parsetab.py
+        if os.path.exists('parsetab.py'):
+            os.remove('parsetab.py')
+
+    except Exception as e:
+        pass  # اگر خطایی بود نادیده بگیر
+
+
+# پاک‌سازی خودکار در شروع
+clear_cache()
+
+# ادامه کد main.py...
+
 """
 Cache Control Instructions Parser - Main Interface
 رابط اصلی Parser دستورات کنترل کش
