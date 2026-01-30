@@ -1,13 +1,34 @@
 #!/usr/bin/env python3
-# !/usr/bin/env python3
-import os
-import shutil
+# -*- coding: utf-8 -*-
+"""
+Cache Control Instructions Parser - Main Interface
+رابط اصلی Parser دستورات کنترل کش
+تیم 15 - پروژه کامپایلر - دانشگاه شهید باهنر کرمان
+"""
+
+# ═════════════════════════════════════════════════════════════════════
+# تنظیمات اولیه - قبل از هر import دیگر
+# ═════════════════════════════════════════════════════════════════════
 import sys
+import os
 
+# 1️⃣ غیرفعال کردن cache برای همیشه
+sys.dont_write_bytecode = True
 
-# ═════════════════════════════════════════════════════════════════════
-# پاک‌سازی خودکار Cache در هر اجرا
-# ═════════════════════════════════════════════════════════════════════
+# 2️⃣ تنظیم UTF-8 برای Windows (فارسی درست نمایش بده)
+if sys.platform == 'win32':
+    try:
+        import codecs
+
+        sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+        sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, 'strict')
+    except:
+        pass
+
+# 3️⃣ پاک‌سازی خودکار cache در هر اجرا
+import shutil
+from pathlib import Path
+
 
 def clear_cache():
     """پاک کردن فایل‌های cache"""
@@ -24,26 +45,15 @@ def clear_cache():
         if os.path.exists('parsetab.py'):
             os.remove('parsetab.py')
 
-    except Exception as e:
+    except Exception:
         pass  # اگر خطایی بود نادیده بگیر
 
 
 # پاک‌سازی خودکار در شروع
 clear_cache()
 
-# ادامه کد main.py...
-
-"""
-Cache Control Instructions Parser - Main Interface
-رابط اصلی Parser دستورات کنترل کش
-تیم 15 - پروژه کامپایلر - دانشگاه شهید باهنر کرمان
-"""
-
-import os
-import sys
+# حالا import های اصلی برنامه
 import json
-import shutil
-from pathlib import Path
 
 # Import Parser Components
 from cache_parser import (
@@ -327,11 +337,39 @@ def option_lr_table():
     print_header("جدول LR(0)")
 
     try:
-        from lr_tables import display_lr_tables
-        display_lr_tables()
-    except ImportError:
-        print("\n❌ ماژول lr_tables پیدا نشد!")
-        print("💡 لطفاً فایل lr_tables.py را در پوشه پروژه قرار دهید")
+        from lr_tables import LR_PARSING_TABLE, GRAMMAR_RULES
+
+        # نمایش جدول
+        print("\n" + "═" * 100)
+        print(" " * 35 + "جدول پارسینگ LR(0)")
+        print("═" * 100)
+
+        for state in sorted(LR_PARSING_TABLE.keys()):
+            actions = LR_PARSING_TABLE[state]
+            print(f"\n🔹 State {state}:")
+
+            for symbol in sorted(actions.keys()):
+                action = actions[symbol]
+                if isinstance(action, int):
+                    print(f"  {symbol:<20} → goto {action}")
+                else:
+                    print(f"  {symbol:<20} → {action}")
+
+        print("\n" + "═" * 100)
+        print("📜 قوانین گرامر")
+        print("═" * 100)
+
+        for rule_num in sorted(GRAMMAR_RULES.keys()):
+            print(f"  R{rule_num:<2}: {GRAMMAR_RULES[rule_num]}")
+
+        print("═" * 100)
+
+    except ImportError as e:
+        print(f"\n❌ خطا در import: {e}")
+        print("💡 لطفاً فایل lr_tables.py را بررسی کنید")
+    except AttributeError as e:
+        print(f"\n❌ خطا: {e}")
+        print("💡 متغیرهای LR_PARSING_TABLE یا GRAMMAR_RULES یافت نشدند")
     except Exception as e:
         print(f"\n❌ خطا: {e}")
 
@@ -350,9 +388,9 @@ def option_shift_reduce():
     try:
         from shift_reduce_trace import trace_shift_reduce
         trace_shift_reduce(code)
-    except ImportError:
-        print("\n❌ ماژول shift_reduce_trace پیدا نشد!")
-        print("💡 لطفاً فایل shift_reduce_trace.py را در پوشه پروژه قرار دهید")
+    except ImportError as e:
+        print(f"\n❌ خطا در import: {e}")
+        print("💡 لطفاً فایل shift_reduce_trace.py را بررسی کنید")
     except Exception as e:
         print(f"\n❌ خطا: {e}")
 
@@ -501,14 +539,18 @@ def option_show_automata():
             print(f"✅ فایل پیدا شد: {filename}")
 
             # باز کردن فایل
-            if os.name == 'nt':  # Windows
-                os.startfile(filename)
-            elif sys.platform == 'darwin':  # macOS
-                os.system(f'open "{filename}"')
-            else:  # Linux
-                os.system(f'xdg-open "{filename}"')
+            try:
+                if os.name == 'nt':  # Windows
+                    os.startfile(filename)
+                elif sys.platform == 'darwin':  # macOS
+                    os.system(f'open "{filename}"')
+                else:  # Linux
+                    os.system(f'xdg-open "{filename}"')
+                print(f"📂 فایل در پنجره جدید باز شد")
+            except Exception as e:
+                print(f"⚠️  خطا در باز کردن فایل: {e}")
+                print(f"💡 لطفاً فایل را به‌صورت دستی باز کنید: {filename}")
 
-            print(f"📂 فایل در پنجره جدید باز شد")
             found = True
             break
 

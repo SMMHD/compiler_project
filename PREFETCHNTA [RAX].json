@@ -1,0 +1,15 @@
+{
+  "type": "Instruction",
+  "mnemonic": "PREFETCHNTA",
+  "operand": {
+    "type": "MemoryOperand",
+    "base": {
+      "type": "Register",
+      "name": "RAX",
+      "bit_width": 64
+    },
+    "offset": null,
+    "has_offset": false
+  },
+  "has_operand": true
+}

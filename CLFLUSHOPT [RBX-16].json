@@ -1,0 +1,15 @@
+{
+  "type": "Instruction",
+  "mnemonic": "CLFLUSHOPT",
+  "operand": {
+    "type": "MemoryOperand",
+    "base": {
+      "type": "Register",
+      "name": "RBX",
+      "bit_width": 64
+    },
+    "offset": "-16",
+    "has_offset": true
+  },
+  "has_operand": true
+}
