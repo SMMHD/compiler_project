@@ -594,6 +594,7 @@ AST: Instruction(WBINVD, None)
 #### تست 3.1: فایل cache_instructions.asm (44 دستور)
 
 **ورودی:**
+
 ```text
 ➤ انتخاب شما: 3
 ➤ نام فایل: cache_instructions.asm
