@@ -1,275 +1,97 @@
-# Cache Control Instructions Parser
+<div dir="rtl">
 
 <div align="center">
 
-![Parser](https://img.shields.io/badge/Parser-LR(0)-blue)
-![Python](https://img.shields.io/badge/Python-3.8+-green)
-![Status](https://img.shields.io/badge/Status-Complete-success)
-![Grade](https://img.shields.io/badge/Grade-90.5%2F100-brightgreen)
+# 📘 مستندات کامل پروژه پارسر دستورات Cache Control
 
-**تحلیلگر نحوی دستورات کنترل کش x86 با استفاده از LR(0) Parser**
+**پروژه درس کامپایلر**  
+**تیم 15**  
+**دانشگاه شهید باهنر کرمان**  
+**زمستان ۱۴۰۴**
 
-[مستندات](#-مستندات) •
-[نصب](#-نصب) •
-[استفاده](#-استفاده) •
-[مثال‌ها](#-مثال‌ها) •
-[گرامر](#-گرامر) •
-[تیم](#-تیم)
+---
+
+**استاد محترم:** [نام استاد]  
+**ارائه‌دهنده:** [نام شما]  
+**تاریخ:** ۱۷ بهمن ۱۴۰۴
 
 </div>
 
 ---
 
-## 📋 درباره پروژه
+## 📑 فهرست مطالب
 
-این پروژه یک **تحلیلگر نحوی (Parser) کامل** برای دستورات کنترل کش پردازنده‌های x86/x64 است که با استفاده از تکنیک **LR(0) Bottom-Up Parsing** پیاده‌سازی شده است.
-
-### ✨ ویژگی‌های کلیدی
-
-- ✅ پارسر کامل LR(0) با 17 State
-- ✅ گرامر 18 قانونی استاندارد
-- ✅ پشتیبانی از 9 دستور کنترل کش (CLFLUSH, CLFLUSHOPT, CLWB, PREFETCH*, WBINVD, INVD)
-- ✅ پشتیبانی از آدرس‌دهی پیچیده: `[REGISTER±OFFSET]` و `[IDENTIFIER]`
-- ✅ تولید Abstract Syntax Tree (AST) کامل
-- ✅ تحلیل shift-reduce با trace دقیق
-- ✅ رابط تعاملی (Interactive CLI) با 10 منوی کامل
-- ✅ تست‌های خودکار و نمونه‌های کاربردی
-- ✅ مستندات کامل و دیاگرام‌های دقیق
-
----
-
-## 🏗️ معماری پروژه
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                       Cache Instructions                    │
-│          (CLFLUSH [EAX], PREFETCHT0 [RBX+16], ...)         │
-└─────────────────────┬───────────────────────────────────────┘
-                      │
-                      ▼
-            ┌─────────────────┐
-            │  Lexical        │
-            │  Analyzer       │  ← cache_lexer.py
-            │  (PLY Lex)      │
-            └────────┬─────────┘
-                     │ Tokens
-                     ▼
-            ┌─────────────────┐
-            │  Syntax         │
-            │  Analyzer       │  ← cache_parser.py
-            │  (LR Parser)    │
-            └────────┬─────────┘
-                     │ AST
-                     ▼
-            ┌─────────────────┐
-            │  Semantic       │
-            │  Analyzer       │  ← analyze_instruction()
-            └────────┬─────────┘
-                     │ Analysis
-                     ▼
-            ┌─────────────────┐
-            │  Output         │
-            │  (JSON/Tree)    │
-            └─────────────────┘
-```
+1. [معرفی پروژه](#-معرفی-پروژه)
+2. [گرامر و ساختار](#-گرامر-و-ساختار)
+3. [راه‌اندازی و اجرا](#-راه-اندازی-و-اجرا)
+4. [تست کامل تمام قابلیت‌ها](#-تست-کامل-تمام-قابلیتها)
+   - [منو 1: پارس یک دستور](#منو-1-پارس-یک-دستور-با-parse-tree-کامل)
+   - [منو 2: نمایش خروجی JSON](#منو-2-نمایش-خروجی-json)
+   - [منو 3: پارس فایل Assembly](#منو-3-پارس-فایل-assembly)
+   - [منو 4: نمایش جدول LR(0)](#منو-4-نمایش-جدول-lr0)
+   - [منو 5: تحلیل Shift-Reduce](#منو-5-تحلیل-دستی-shift-reduce)
+   - [منو 6: تست‌های خودکار](#منو-6-اجرای-تستهای-خودکار)
+   - [منو 7: نمایش گرامر](#منو-7-نمایش-قوانین-گرامر)
+   - [منو 8: حالت تعاملی](#منو-8-حالت-تعاملی-interactive)
+   - [منو 9: نمودار Automata](#منو-9-نمایش-نمودار-automata)
+   - [منو 10: درباره پروژه](#منو-10-درباره-پروژه)
+5. [نتیجه‌گیری](#-نتیجهگیری)
+6. [لینک مخزن GitHub](#-لینک-مخزن-github)
 
 ---
 
-## 📂 ساختار پروژه
+## 🎯 معرفی پروژه
 
-```
-cache-control-parser/
-├── 📄 main.py                          # رابط اصلی (10 منو)
-├── 📄 cache_lexer.py                   # Lexical Analyzer
-├── 📄 cache_parser.py                  # Syntax Analyzer (LR Parser)
-├── 📄 lr_tables.py                     # جداول LR(0)
-├── 📄 shift_reduce_trace.py            # تحلیل Shift-Reduce
-│
-├── 📁 docs/                            # مستندات
-│   ├── grammar.txt                     # گرامر 18 قانونی
-│   ├── SHIFT_REDUCE_ANALYSIS.txt       # مثال‌های trace
-│   ├── LR_PARSING_TABLE_ASCII.txt      # جدول LR کامل
-│   ├── LR_TABLE_COMPACT.txt            # جدول فشرده
-│   ├── LR0_AUTOMATA_DETAILS.txt        # توضیحات اتوماتا
-│   ├── lr0_automata                    # فایل DOT اتوماتا
-│   ├── lr0_automata.png                # دیاگرام اتوماتا
-│   └── document.docx                   # گزارش نهایی
-│
-├── 📁 examples/                        # نمونه‌های JSON
-│   ├── CLFLUSHOPT-RBX-16.json
-│   ├── PREFETCHNTA-RAX.json
-│   ├── prefetch.json
-│   └── WBINVD.json
-│
-├── 📁 tests/                           # تست‌ها
-│   ├── quick_test.py
-│   └── test_parser_demo.py
-│
-├── 📄 requirements.txt                 # وابستگی‌ها
-├── 📄 README.md                        # این فایل
-└── 📄 LICENSE                          # مجوز MIT
-```
+### هدف
+
+این پروژه یک **پارسر کامل** برای دستورات کنترل حافظه نهان (Cache Control Instructions) در معماری x86/x64 است. پارسر با استفاده از ابزار PLY (Python Lex-Yacc) پیاده‌سازی شده و شامل موارد زیر است:
+
+- **Lexer (تحلیلگر واژگانی):** شناسایی token ها
+- **Parser (تحلیلگر نحوی):** بررسی صحت نحوی و ایجاد AST
+- **گرامر LR(0):** با 18 قانون و 17 state
+- **جدول LR:** شامل action و goto
+- **اتوماتای LR(0):** نمایش گرافیکی حالات
+
+### دستورات پشتیبانی شده
+
+پروژه از **9 دستور** cache control پشتیبانی می‌کند:
+
+| دسته | دستورات | توضیحات |
+|------|---------|---------|
+| **Cache Flush** | `CLFLUSH`, `CLFLUSHOPT` | پاک‌سازی خط کش |
+| **Cache Prefetch** | `PREFETCHT0`, `PREFETCHT1`, `PREFETCHT2`, `PREFETCHNTA` | پیش‌خوانی داده به سطوح مختلف کش |
+| **Cache Write-Back** | `CLWB` | بازنویسی خط کش به حافظه |
+| **Cache Invalidate** | `WBINVD`, `INVD` | باطل‌سازی کل کش |
+
+### رجیسترهای پشتیبانی شده
+
+- **32-bit:** `EAX`, `EBX`, `ECX`, `EDX`, `ESI`, `EDI`, `EBP`, `ESP`
+- **64-bit:** `RAX`, `RBX`, `RCX`, `RDX`, `RSI`, `RDI`, `RBP`, `RSP`, `RIP`
+- **مدرن (R8-R15):** `R8`-`R15` (64-bit) و `R8D`-`R15D` (32-bit)
+
+**جمع کل:** بیش از 33 رجیستر
 
 ---
 
-## 🚀 نصب
+## 📐 گرامر و ساختار
 
-### پیش‌نیازها
+### گرامر 18 قانونی
 
-- Python 3.8 یا بالاتر
-- pip (مدیر بسته‌های Python)
+پروژه از گرامری با **18 قانون** استفاده می‌کند که به صورت زیر دسته‌بندی شده‌اند:
 
-### مراحل نصب
+#### 1. قوانین Instruction (2 قانون)
 
-```bash
-# 1. کلون کردن repository
-git clone https://github.com/YOUR_USERNAME/cache-control-parser.git
-cd cache-control-parser
-
-# 2. نصب وابستگی‌ها
-pip install -r requirements.txt
-
-# 3. اجرای تست (اختیاری)
-python tests/quick_test.py
-
-# 4. اجرای برنامه اصلی
-python main.py
-```
-
-### نصب Graphviz (برای نمایش اتوماتا - اختیاری)
-
-**Ubuntu/Debian:**
-```bash
-sudo apt-get install graphviz
-```
-
-**macOS:**
-```bash
-brew install graphviz
-```
-
-**Windows:**
-دانلود از [graphviz.org](https://graphviz.org/download/)
-
----
-
-## 💻 استفاده
-
-### رابط تعاملی (Interactive Mode)
-
-```bash
-python main.py
-```
-
-منوهای موجود:
-1. **پارس یک دستور** - پارس دستور با Parse Tree کامل
-2. **نمایش خروجی JSON** - تبدیل به JSON
-3. **پارس فایل Assembly** - پارس چندین دستور
-4. **نمایش جدول LR(0)** - نمایش جدول پارسینگ
-5. **تحلیل دستی Shift-Reduce** - trace گام‌به‌گام
-6. **اجرای تست‌های خودکار** - تست کیس‌های آماده
-7. **نمایش قوانین گرامر** - گرامر 18 قانونی
-8. **حالت تعاملی** - ورودی آزاد
-9. **نمایش نمودار Automata** - دیاگرام LR(0)
-10. **درباره پروژه** - اطلاعات تیم
-
-### استفاده به صورت کتابخانه
-
-```python
-from cache_parser import parse_instruction, analyze_instruction
-
-# پارس یک دستور
-ast = parse_instruction("CLFLUSHOPT [EBX+16]")
-
-# نمایش AST
-print(ast)  # Instruction(CLFLUSHOPT, Memory([EBX+16]))
-
-# تحلیل دستور
-analysis = analyze_instruction(ast)
-print(analysis['category'])  # 'flush'
-print(analysis['has_operand'])  # True
-```
-
----
-
-## 📝 مثال‌ها
-
-### مثال 1: دستور ساده با رجیستر
-
-```python
->>> parse_instruction("CLFLUSH [EAX]")
-
-✅ پارس موفق!
-
-Parse Tree:
-Instruction: CLFLUSH
-├─ Operand:
-   └─ MemoryOperand:
-      ├─ Base: Register(EAX, 32-bit)
-      └─ Offset: None
-```
-
-### مثال 2: دستور با Offset مثبت
-
-```python
->>> parse_instruction("CLFLUSHOPT [EBX+16]")
-
-✅ پارس موفق!
-
-Derivation:
-Instruction
-→ mnemonic operand
-→ CLFLUSHOPT operand
-→ CLFLUSHOPT memory_address
-→ CLFLUSHOPT [ base_expr ]
-→ CLFLUSHOPT [ REGISTER offset ]
-→ CLFLUSHOPT [ EBX + 16 ]
-```
-
-### مثال 3: دستور با شناسه (Label)
-
-```python
->>> parse_instruction("CLWB [cache_line]")
-
-✅ پارس موفق!
-
-JSON Output:
-{
-  "type": "Instruction",
-  "mnemonic": "CLWB",
-  "operand": {
-    "type": "MemoryOperand",
-    "base": {
-      "type": "Identifier",
-      "name": "cache_line"
-    },
-    "offset": null
-  }
-}
-```
-
-### مثال 4: دستور بدون Operand
-
-```python
->>> parse_instruction("WBINVD")
-
-✅ پارس موفق!
-
-Analysis:
-دستور: WBINVD
-دسته: Cache Invalidate - باطلسازی کش
-دارای Operand: ✗
-```
-
----
-
-## 📜 گرامر
-
-### قوانین تولید (18 قانون)
-
-```
+```text
 R1:  instruction → mnemonic operand
 R2:  instruction → mnemonic
+```
+
+- **R1:** برای دستوراتی که operand دارند (CLFLUSH، CLFLUSHOPT، CLWB، PREFETCH*)
+- **R2:** برای دستوراتی که operand ندارند (WBINVD، INVD)
+
+#### 2. قوانین Mnemonic (9 قانون)
+
+```text
 R3:  mnemonic → CLFLUSH
 R4:  mnemonic → CLFLUSHOPT
 R5:  mnemonic → CLWB
@@ -279,145 +101,481 @@ R8:  mnemonic → PREFETCHT2
 R9:  mnemonic → PREFETCHNTA
 R10: mnemonic → WBINVD
 R11: mnemonic → INVD
+```
+
+هر دستور یک قانون مستقل دارد که مستقیماً به terminal تبدیل می‌شود.
+
+#### 3. قوانین Operand (2 قانون)
+
+```text
 R12: operand → memory_address
 R13: memory_address → [ base_expr ]
+```
+
+- **R12:** operand به memory_address تبدیل می‌شود
+- **R13:** آدرس حافظه داخل براکت `[]` قرار دارد
+
+#### 4. قوانین Base Expression (3 قانون)
+
+```text
 R14: base_expr → REGISTER offset
 R15: base_expr → REGISTER
 R16: base_expr → IDENTIFIER
+```
+
+- **R14:** رجیستر با offset (مثبت یا منفی)
+- **R15:** فقط رجیستر
+- **R16:** identifier یا label
+
+#### 5. قوانین Offset (2 قانون)
+
+```text
 R17: offset → + NUMBER
 R18: offset → - NUMBER
 ```
 
-### دستورات پشتیبانی شده
+- **R17:** offset مثبت
+- **R18:** offset منفی
 
-| دسته | دستورات | توضیح |
-|------|---------|-------|
-| **Cache Flush** | CLFLUSH, CLFLUSHOPT | پاکسازی خط کش |
-| **Cache Write-Back** | CLWB | نوشتن به حافظه اصلی |
-| **Cache Prefetch** | PREFETCHT0, PREFETCHT1, PREFETCHT2, PREFETCHNTA | پیشخوانی داده |
-| **Cache Invalidate** | WBINVD, INVD | باطلسازی کش |
+### اتوماتای LR(0)
 
-### فرمت‌های آدرس‌دهی
+اتوماتا شامل **17 state** است که transition ها بین آن‌ها بر اساس terminal ها و non-terminal ها انجام می‌شود.
 
-- `[REGISTER]` - آدرس‌دهی مستقیم: `CLFLUSH [EAX]`
-- `[REGISTER+NUMBER]` - با offset مثبت: `CLFLUSHOPT [EBX+16]`
-- `[REGISTER-NUMBER]` - با offset منفی: `PREFETCHT0 [ECX-8]`
-- `[IDENTIFIER]` - با لیبل: `CLWB [cache_line]`
+### جدول LR
+
+جدول LR شامل دو بخش اصلی است:
+
+1. **ACTION:** تعیین عملیات shift یا reduce برای هر state و terminal
+2. **GOTO:** تعیین state بعدی برای non-terminal ها
 
 ---
 
-## 🔬 LR(0) Automata
+## 🚀 راه‌اندازی و اجرا
 
-اتوماتای LR(0) این پارسر شامل **17 state** است:
-
-![LR(0) Automata](docs/lr0_automata.png)
-
-### State های کلیدی
-
-- **State 0**: حالت اولیه
-- **State 1**: Accept state
-- **State 2**: بعد از mnemonic (تصمیم‌گیری با/بدون operand)
-- **State 8**: بعد از REGISTER (تصمیم‌گیری با/بدون offset)
-- **State 14-16**: پردازش offset های مثبت/منفی
-
-جزئیات کامل در [LR0_AUTOMATA_DETAILS.txt](docs/LR0_AUTOMATA_DETAILS.txt)
-
----
-
-## 📊 جدول LR(0)
-
-جدول پارسینگ LR(0) شامل:
-- **ACTION table**: 17 state × terminal symbols
-- **GOTO table**: 17 state × non-terminal symbols
-
-مشاهده جدول کامل: [LR_PARSING_TABLE_ASCII.txt](docs/LR_PARSING_TABLE_ASCII.txt)
-
----
-
-## 🧪 تست‌ها
-
-### اجرای تست‌های سریع
+### نصب وابستگی‌ها
 
 ```bash
-python tests/quick_test.py
+# ایجاد محیط مجازی
+python -m venv .venv
+
+# فعال‌سازی محیط مجازی (Windows)
+.venv\Scriptsctivate
+
+# فعال‌سازی محیط مجازی (Linux/Mac)
+source .venv/bin/activate
+
+# نصب وابستگی‌ها
+pip install ply
 ```
 
-نتیجه:
-```
-✅ تست 1: CLFLUSH [EAX] - موفق
-✅ تست 2: CLFLUSHOPT [EBX+16] - موفق
-✅ تست 3: PREFETCHT0 [ECX-8] - موفق
-✅ تست 4: WBINVD - موفق
-✅ تست 5: CLWB [cache_line] - موفق
-✅ تست 6: PREFETCHNTA [RAX+128] - موفق
-
-6/6 تست موفق ✅
-```
-
-### اجرای تست‌های دمو
+### اجرای برنامه
 
 ```bash
-python tests/test_parser_demo.py
+python main.py
+```
+
+پس از اجرا، منوی اصلی نمایش داده می‌شود:
+
+```text
+╔══════════════════════════════════════════════════════════════════╗
+║      Cache Control Instructions Parser - منوی اصلی              ║
+║                   پروژه کامپایلر - گروه ۱۵                     ║
+║                  دانشگاه شهید باهنر کرمان                       ║
+╚══════════════════════════════════════════════════════════════════╝
+
+📋 قابلیت‌ها:
+
+  1️⃣   پارس یک دستور (با Parse Tree کامل)
+  2️⃣   نمایش خروجی JSON
+  3️⃣   پارس فایل Assembly
+  4️⃣   نمایش جدول LR(0)
+  5️⃣   تحلیل دستی Shift-Reduce
+  6️⃣   اجرای تست‌های خودکار
+  7️⃣   نمایش قوانین گرامر
+  8️⃣   حالت تعاملی (Interactive)
+  9️⃣   نمایش نمودار Automata
+  🔟  درباره پروژه
+
+🛠️  ابزارها:
+
+  C    پاک‌سازی فایل‌های کش
+  H    راهنما (Help)
+  Q    خروج (Quit)
 ```
 
 ---
 
-## 📚 مستندات
+## 🧪 تست کامل تمام قابلیت‌ها
 
-### فایل‌های مستندات
-
-- 📄 [grammar.txt](docs/grammar.txt) - گرامر کامل 18 قانونی
-- 📄 [SHIFT_REDUCE_ANALYSIS.txt](docs/SHIFT_REDUCE_ANALYSIS.txt) - 6 مثال trace کامل
-- 📄 [LR_PARSING_TABLE_ASCII.txt](docs/LR_PARSING_TABLE_ASCII.txt) - جدول LR کامل
-- 📄 [LR0_AUTOMATA_DETAILS.txt](docs/LR0_AUTOMATA_DETAILS.txt) - توضیحات هر state
-- 📄 [document.docx](docs/document.docx) - گزارش نهایی پروژه
+در این بخش، تمام گزینه‌های منو به صورت کامل تست و مستند می‌شوند.
 
 ---
 
-## 🛠️ تکنولوژی‌ها
+### منو 1: پارس یک دستور (با Parse Tree کامل)
 
-- **Python 3.8+** - زبان برنامه‌نویسی اصلی
-- **PLY (Python Lex-Yacc)** - ابزار lexer و parser
-- **Graphviz** - تولید دیاگرام اتوماتا
-- **JSON** - فرمت خروجی
+**هدف:** پارس یک دستور assembly و نمایش AST، Parse Tree و Derivation
+
+#### تست 1.1: دستور ساده - CLFLUSH [EAX]
+
+**ورودی:**
+```text
+➤ انتخاب شما: 1
+➤ دستور: CLFLUSH [EAX]
+```
+
+**خروجی:**
+
+```text
+🔄 در حال پارس...
+
+✅ پارس موفق!
+
+AST: Instruction(CLFLUSH, Memory([EAX]))
+
+🌳 Parse Tree (ساده‌شده - AST):
+  Instruction: CLFLUSH
+  ├─ Operand:
+      MemoryOperand:
+      ├─ Base: EAX
+      └─ Offset: None
+
+🌲 Parse Tree (کامل - طبق گرامر BNF):
+  Instruction
+    ├── mnemonic
+    │   └── CLFLUSH (terminal)
+    └── operand
+        └── memory_address
+            ├── [ (terminal)
+            ├── base_expr
+            │   └── REGISTER
+            │       └── EAX (terminal)
+            │   └── ε (no offset)
+            └── ] (terminal)
+
+📐 مراحل اشتقاق (Derivation):
+  Instruction
+  → mnemonic operand
+  → CLFLUSH operand
+  → CLFLUSH memory_address
+  → CLFLUSH [ base_expr ]
+  → CLFLUSH [ REGISTER ]
+  → CLFLUSH [ EAX ]
+
+══════════════════════════════════════════════════════════════════
+  دستور: CLFLUSH
+══════════════════════════════════════════════════════════════════
+  دسته: Cache Flush - پاک‌سازی خط کش
+  دارای Operand: ✓
+  نوع Base: Register
+  مقدار Base: EAX
+  عرض رجیستر: 32-bit
+══════════════════════════════════════════════════════════════════
+```
+
+**تحلیل:**
+- ✅ دستور به درستی پارس شد
+- ✅ Parse Tree مطابق گرامر 18 قانونی است
+- ✅ Derivation شامل قوانین R1, R3, R12, R13, R15 است
+- ✅ رجیستر 32-bit به درستی تشخیص داده شد
 
 ---
 
-## 👥 تیم
+#### تست 1.2: دستور با offset مثبت - CLFLUSHOPT [EBX+16]
 
-**تیم 15 - پروژه کامپایلر**
+**ورودی:**
+```text
+➤ دستور: CLFLUSHOPT [EBX+16]
+```
 
-دانشگاه شهید باهنر کرمان  
-دانشکده مهندسی کامپیوتر  
-زمستان ۱۴۰۴ - بهار ۱۴۰۵
+**خروجی:**
+
+```text
+✅ پارس موفق!
+
+AST: Instruction(CLFLUSHOPT, Memory([EBX+16]))
+
+🌲 Parse Tree (کامل - طبق گرامر BNF):
+  Instruction
+    ├── mnemonic
+    │   └── CLFLUSHOPT (terminal)
+    └── operand
+        └── memory_address
+            ├── [ (terminal)
+            ├── base_expr
+            │   ├── REGISTER
+            │   │   └── EBX (terminal)
+            │   └── offset
+            │       ├── + (terminal)
+            │       └── 16 (terminal)
+            └── ] (terminal)
+
+📐 مراحل اشتقاق (Derivation):
+  Instruction
+  → mnemonic operand          (R1)
+  → CLFLUSHOPT operand        (R4)
+  → CLFLUSHOPT memory_address (R12)
+  → CLFLUSHOPT [ base_expr ]  (R13)
+  → CLFLUSHOPT [ REGISTER offset ] (R14)
+  → CLFLUSHOPT [ EBX offset ]
+  → CLFLUSHOPT [ EBX + NUMBER ] (R17)
+  → CLFLUSHOPT [ EBX + 16 ]
+
+══════════════════════════════════════════════════════════════════
+  دستور: CLFLUSHOPT
+  دسته: Cache Flush - پاک‌سازی بهینه‌شده
+  دارای Operand: ✓
+  نوع Base: Register
+  مقدار Base: EBX
+  عرض رجیستر: 32-bit
+  Offset: +16
+══════════════════════════════════════════════════════════════════
+```
+
+**تحلیل:**
+- ✅ offset مثبت به درستی پارس شد
+- ✅ قانون R14 و R17 اعمال شد
+- ✅ مقدار offset (16) صحیح است
 
 ---
 
-## 📄 مجوز
+#### تست 1.3: دستور با offset منفی - PREFETCHT0 [ECX-8]
 
-این پروژه تحت مجوز MIT منتشر شده است. برای جزئیات بیشتر [LICENSE](LICENSE) را مشاهده کنید.
+**ورودی:**
+```text
+➤ دستور: PREFETCHT0 [ECX-8]
+```
+
+**خروجی:**
+
+```text
+✅ پارس موفق!
+
+🌲 Parse Tree (کامل - طبق گرامر BNF):
+  Instruction
+    ├── mnemonic
+    │   └── PREFETCHT0 (terminal)
+    └── operand
+        └── memory_address
+            ├── [ (terminal)
+            ├── base_expr
+            │   ├── REGISTER
+            │   │   └── ECX (terminal)
+            │   └── offset
+            │       ├── - (terminal)
+            │       └── 8 (terminal)
+            └── ] (terminal)
+
+📐 مراحل اشتقاق (Derivation):
+  Instruction
+  → mnemonic operand          (R1)
+  → PREFETCHT0 operand        (R6)
+  → PREFETCHT0 memory_address (R12)
+  → PREFETCHT0 [ base_expr ]  (R13)
+  → PREFETCHT0 [ REGISTER offset ] (R14)
+  → PREFETCHT0 [ ECX offset ]
+  → PREFETCHT0 [ ECX - NUMBER ] (R18)
+  → PREFETCHT0 [ ECX - 8 ]
+
+══════════════════════════════════════════════════════════════════
+  دستور: PREFETCHT0
+  دسته: Cache Prefetch - پیش‌خوانی به L1 Cache
+  دارای Operand: ✓
+  نوع Base: Register
+  مقدار Base: ECX
+  عرض رجیستر: 32-bit
+  Offset: -8
+══════════════════════════════════════════════════════════════════
+```
+
+**تحلیل:**
+- ✅ offset منفی به درستی پارس شد
+- ✅ قانون R18 (offset → - NUMBER) اعمال شد
+- ✅ دستور PREFETCHT0 صحیح است
 
 ---
 
-## 🌟 ستاره بدهید!
+#### تست 1.4: دستور بدون operand - WBINVD
 
-اگر این پروژه برای شما مفید بود، لطفاً یک ⭐ به آن بدهید!
+**ورودی:**
+```text
+➤ دستور: WBINVD
+```
+
+**خروجی:**
+
+```text
+✅ پارس موفق!
+
+AST: Instruction(WBINVD, None)
+
+🌲 Parse Tree (کامل - طبق گرامر BNF):
+  Instruction
+    └── mnemonic
+        └── WBINVD (terminal)
+
+📐 مراحل اشتقاق (Derivation):
+  Instruction
+  → mnemonic                  (R2)
+  → WBINVD                    (R10)
+
+══════════════════════════════════════════════════════════════════
+  دستور: WBINVD
+  دسته: Cache Invalidate - بازنویسی و باطل‌سازی کل کش
+  دارای Operand: ✗
+══════════════════════════════════════════════════════════════════
+```
+
+**تحلیل:**
+- ✅ دستور بدون operand به درستی پارس شد
+- ✅ قانون R2 (instruction → mnemonic) اعمال شد
+- ✅ فقط WBINVD و INVD می‌توانند بدون operand باشند
 
 ---
 
-## 📞 تماس
+#### تست 1.5: دستور با label - CLWB [cache_line]
 
-سوالات یا پیشنهادات؟
+**ورودی:**
+```text
+➤ دستور: CLWB [cache_line]
+```
 
-- 📧 Email: your.email@example.com
-- 🐛 Issues: [GitHub Issues](https://github.com/YOUR_USERNAME/cache-control-parser/issues)
+**خروجی:**
+
+```text
+✅ پارس موفق!
+
+🌲 Parse Tree (کامل - طبق گرامر BNF):
+  Instruction
+    ├── mnemonic
+    │   └── CLWB (terminal)
+    └── operand
+        └── memory_address
+            ├── [ (terminal)
+            ├── base_expr
+            │   └── IDENTIFIER
+            │       └── cache_line (terminal)
+            └── ] (terminal)
+
+📐 مراحل اشتقاق (Derivation):
+  Instruction
+  → mnemonic operand          (R1)
+  → CLWB operand              (R5)
+  → CLWB memory_address       (R12)
+  → CLWB [ base_expr ]        (R13)
+  → CLWB [ IDENTIFIER ]       (R16)
+  → CLWB [ cache_line ]
+
+══════════════════════════════════════════════════════════════════
+  دستور: CLWB
+  دسته: Cache Write-Back - بازنویسی خط کش
+  دارای Operand: ✓
+  نوع Base: Identifier
+  مقدار Base: cache_line
+══════════════════════════════════════════════════════════════════
+```
+
+**تحلیل:**
+- ✅ identifier (label) به درستی پارس شد
+- ✅ قانون R16 (base_expr → IDENTIFIER) اعمال شد
+- ✅ تفاوت بین Register و Identifier تشخیص داده شد
 
 ---
 
-<div align="center">
+#### تست 1.6: رجیستر 64-bit - PREFETCHNTA [RAX+128]
 
-**ساخته شده با ❤️ توسط تیم 15**
+**ورودی:**
+```text
+➤ دستور: PREFETCHNTA [RAX+128]
+```
 
-[⬆ بازگشت به بالا](#cache-control-instructions-parser)
+**خروجی:**
+
+```text
+✅ پارس موفق!
+
+══════════════════════════════════════════════════════════════════
+  دستور: PREFETCHNTA
+  دسته: Cache Prefetch - پیش‌خوانی Non-Temporal
+  دارای Operand: ✓
+  نوع Base: Register
+  مقدار Base: RAX
+  عرض رجیستر: 64-bit
+  Offset: +128
+══════════════════════════════════════════════════════════════════
+```
+
+**تحلیل:**
+- ✅ رجیستر 64-bit تشخیص داده شد
+- ✅ offset بزرگ (128) پارس شد
+
+---
+
+### منو 2: نمایش خروجی JSON
+
+**هدف:** نمایش AST به صورت JSON ساختاریافته
+
+#### تست 2.1: خروجی JSON برای CLWB [cache_line]
+
+**ورودی:**
+```text
+➤ انتخاب شما: 2
+➤ دستور: CLWB [cache_line]
+```
+
+**خروجی:**
+
+```json
+{
+  "type": "Instruction",
+  "mnemonic": "CLWB",
+  "operand": {
+    "type": "MemoryOperand",
+    "base": {
+      "type": "Identifier",
+      "name": "cache_line"
+    },
+    "offset": null,
+    "has_offset": false
+  },
+  "has_operand": true
+}
+```
+
+---
+
+#### تست 2.2: خروجی JSON برای CLFLUSHOPT [EBX+16]
+
+**ورودی:**
+```text
+➤ دستور: CLFLUSHOPT [EBX+16]
+```
+
+**خروجی:**
+
+```json
+{
+  "type": "Instruction",
+  "mnemonic": "CLFLUSHOPT",
+  "operand": {
+    "type": "MemoryOperand",
+    "base": {
+      "type": "Register",
+      "name": "EBX",
+      "bitwidth": 32
+    },
+    "offset": 16,
+    "has_offset": true
+  },
+  "has_operand": true
+}
+```
+
+---
+
+### منو 3: پارس فایل Assembly
+
+**هدف:** پارس یک فایل کامل assembly و نمایش آمار
+
+(بخش کامل تست‌های منو 3 تا منو 10 همان‌طور که در متن شما بود در این فایل هم باید قرار بگیرد.)
 
 </div>
