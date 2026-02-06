@@ -1,27 +1,33 @@
 ╔══════════════════════════════════════════════════════════════════════════════════════════════════╗
 ║                              تحلیل دستی Shift-Reduce Parse                                      ║
 ║                                   پروژه کامپایلر - گروه 15                                       ║
+║                              با شماره‌گذاری استاندارد 18 قانونی                                 ║
 ╚══════════════════════════════════════════════════════════════════════════════════════════════════╝
 
 ════════════════════════════════════════════════════════════════════════════════════════════════════
- قوانین گرامر (Grammar Rules)
+ قوانین گرامر (Grammar Rules) - نسخه استاندارد
 ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 قانون  | قاعده تولید                                   | توضیح                         
-─────────────────────────────────────────────────────────────────────────────────────
-R1     | Instruction → Mnemonic Operand                | دستور با عملوند               
-R2     | Instruction → Mnemonic                        | دستور بدون عملوند             
-R3     | Mnemonic → CLFLUSH | CLFLUSHOPT               | دستورات Flush                 
-R4     | Mnemonic → CLWB                               | دستور Write-Back              
-R5     | Mnemonic → PREFETCHT0 | PREFETCHT1 | ...      | دستورات Prefetch              
-R6     | Mnemonic → WBINVD | INVD                      | دستورات Invalidate            
-R7     | Operand → MemoryAddress                       | عملوند حافظه                  
-R8     | MemoryAddress → [ BaseExpr ]                  | آدرس حافظه                    
-R9     | BaseExpr → Register Offset                    | رجیستر با offset              
-R10    | BaseExpr → Register                           | رجیستر ساده                   
-R11    | BaseExpr → Identifier                         | شناسه/لیبل                    
-R12    | Offset → + NUMBER                             | offset مثبت                   
-R13    | Offset → - NUMBER                             | offset منفی                   
+───────────────────────────────────────────────────────────────────────────────────────────────
+R1     | instruction → mnemonic operand                | دستور با عملوند               
+R2     | instruction → mnemonic                        | دستور بدون عملوند             
+R3     | mnemonic → CLFLUSH                            | دستور Flush                   
+R4     | mnemonic → CLFLUSHOPT                         | دستور Flush بهینه‌شده         
+R5     | mnemonic → CLWB                               | دستور Write-Back              
+R6     | mnemonic → PREFETCHT0                         | دستور Prefetch T0             
+R7     | mnemonic → PREFETCHT1                         | دستور Prefetch T1             
+R8     | mnemonic → PREFETCHT2                         | دستور Prefetch T2             
+R9     | mnemonic → PREFETCHNTA                        | دستور Prefetch NTA            
+R10    | mnemonic → WBINVD                             | دستور Invalidate کل کش       
+R11    | mnemonic → INVD                               | دستور Invalidate ساده         
+R12    | operand → memory_address                      | عملوند حافظه                  
+R13    | memory_address → LBRACKET base_expr RBRACKET  | آدرس حافظه                    
+R14    | base_expr → REGISTER offset                   | رجیستر با offset              
+R15    | base_expr → REGISTER                          | رجیستر ساده                   
+R16    | base_expr → IDENTIFIER                        | شناسه/لیبل                    
+R17    | offset → PLUS NUMBER                          | offset مثبت                   
+R18    | offset → MINUS NUMBER                         | offset منفی                   
 
 
 ════════════════════════════════════════════════════════════════════════════════════════════════════
@@ -34,15 +40,15 @@ R13    | Offset → - NUMBER                             | offset منفی
 مرحله    | پشته (Stack)                   | ورودی باقی‌مانده          | عملیات          | قانون/توضیح         
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 1        | $                              | CLFLUSH [ EAX ] $         | Shift           | انتقال CLFLUSH      
-2        | $ CLFLUSH                      | [ EAX ] $                 | Reduce          | R3: CLFLUSH → Mnem  
-3        | $ Mnemonic                     | [ EAX ] $                 | Shift           | انتقال [            
-4        | $ Mnemonic [                   | EAX ] $                   | Shift           | انتقال رجیستر       
-5        | $ Mnemonic [ EAX               | ] $                       | Reduce          | R10: REG → Base     
-6        | $ Mnemonic [ Base              | ] $                       | Shift           | انتقال ]            
-7        | $ Mnemonic [ Base ]            | $                         | Reduce          | R8: [Base] → MemAddr
-8        | $ Mnemonic MemAddr             | $                         | Reduce          | R7: MemAddr → Operand
-9        | $ Mnemonic Operand             | $                         | Reduce          | R1: Mnem+Op → Inst  
-10       | $ Instruction                  | $                         | Accept          | ✅ پذیرش             
+2        | $ CLFLUSH                      | [ EAX ] $                 | Reduce          | R3: CLFLUSH → mnemonic
+3        | $ mnemonic                     | [ EAX ] $                 | Shift           | انتقال [            
+4        | $ mnemonic [                   | EAX ] $                   | Shift           | انتقال REGISTER     
+5        | $ mnemonic [ REGISTER          | ] $                       | Reduce          | R15: REGISTER → base_expr
+6        | $ mnemonic [ base_expr         | ] $                       | Shift           | انتقال ]            
+7        | $ mnemonic [ base_expr ]       | $                         | Reduce          | R13: [...] → memory_address
+8        | $ mnemonic memory_address      | $                         | Reduce          | R12: memory_address → operand
+9        | $ mnemonic operand             | $                         | Reduce          | R1: mnemonic operand → instruction
+10       | $ instruction                  | $                         | Accept          | ✅ پذیرش             
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 ✅ پارس موفق - دستور معتبر است
 
@@ -57,24 +63,50 @@ R13    | Offset → - NUMBER                             | offset منفی
 مرحله    | پشته (Stack)                   | ورودی باقی‌مانده          | عملیات          | قانون/توضیح         
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 1        | $                              | CLFLUSHOPT [ EBX + 16 ] $ | Shift           | انتقال CLFLUSHOPT   
-2        | $ CLFLUSHOPT                   | [ EBX + 16 ] $            | Reduce          | R3: CLFLUSHOPT → Mnem
-3        | $ Mnemonic                     | [ EBX + 16 ] $            | Shift           | انتقال [            
-4        | $ Mnemonic [                   | EBX + 16 ] $              | Shift           | انتقال رجیستر       
-5        | $ Mnemonic [ EBX               | + 16 ] $                  | Shift           | انتقال +            
-6        | $ Mnemonic [ EBX +             | 16 ] $                    | Shift           | انتقال عدد          
-7        | $ Mnemonic [ EBX + 16          | ] $                       | Reduce          | R12: +NUM → Offset  
-8        | $ Mnemonic [ EBX Offset        | ] $                       | Reduce          | R9: REG+Off → Base  
-9        | $ Mnemonic [ Base              | ] $                       | Shift           | انتقال ]            
-10       | $ Mnemonic [ Base ]            | $                         | Reduce          | R8: [Base] → MemAddr
-11       | $ Mnemonic MemAddr             | $                         | Reduce          | R7: MemAddr → Operand
-12       | $ Mnemonic Operand             | $                         | Reduce          | R1: Mnem+Op → Inst  
-13       | $ Instruction                  | $                         | Accept          | ✅ پذیرش             
+2        | $ CLFLUSHOPT                   | [ EBX + 16 ] $            | Reduce          | R4: CLFLUSHOPT → mnemonic
+3        | $ mnemonic                     | [ EBX + 16 ] $            | Shift           | انتقال [            
+4        | $ mnemonic [                   | EBX + 16 ] $              | Shift           | انتقال REGISTER     
+5        | $ mnemonic [ REGISTER          | + 16 ] $                  | Shift           | انتقال +            
+6        | $ mnemonic [ REGISTER +        | 16 ] $                    | Shift           | انتقال NUMBER       
+7        | $ mnemonic [ REGISTER + NUMBER | ] $                       | Reduce          | R17: + NUMBER → offset
+8        | $ mnemonic [ REGISTER offset   | ] $                       | Reduce          | R14: REGISTER offset → base_expr
+9        | $ mnemonic [ base_expr         | ] $                       | Shift           | انتقال ]            
+10       | $ mnemonic [ base_expr ]       | $                         | Reduce          | R13: [...] → memory_address
+11       | $ mnemonic memory_address      | $                         | Reduce          | R12: memory_address → operand
+12       | $ mnemonic operand             | $                         | Reduce          | R1: mnemonic operand → instruction
+13       | $ instruction                  | $                         | Accept          | ✅ پذیرش             
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 ✅ پارس موفق - دستور معتبر است
 
 
 ════════════════════════════════════════════════════════════════════════════════════════════════════
- مثال 3: WBINVD - دستور بدون Operand
+ مثال 3: PREFETCHT0 [ECX-8] - دستور با Offset منفی
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+📋 دستور ورودی: PREFETCHT0 [ECX-8]
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+مرحله    | پشته (Stack)                   | ورودی باقی‌مانده          | عملیات          | قانون/توضیح         
+────────────────────────────────────────────────────────────────────────────────────────────────────
+1        | $                              | PREFETCHT0 [ ECX - 8 ] $  | Shift           | انتقال PREFETCHT0   
+2        | $ PREFETCHT0                   | [ ECX - 8 ] $             | Reduce          | R6: PREFETCHT0 → mnemonic
+3        | $ mnemonic                     | [ ECX - 8 ] $             | Shift           | انتقال [            
+4        | $ mnemonic [                   | ECX - 8 ] $               | Shift           | انتقال REGISTER     
+5        | $ mnemonic [ REGISTER          | - 8 ] $                   | Shift           | انتقال -            
+6        | $ mnemonic [ REGISTER -        | 8 ] $                     | Shift           | انتقال NUMBER       
+7        | $ mnemonic [ REGISTER - NUMBER | ] $                       | Reduce          | R18: - NUMBER → offset
+8        | $ mnemonic [ REGISTER offset   | ] $                       | Reduce          | R14: REGISTER offset → base_expr
+9        | $ mnemonic [ base_expr         | ] $                       | Shift           | انتقال ]            
+10       | $ mnemonic [ base_expr ]       | $                         | Reduce          | R13: [...] → memory_address
+11       | $ mnemonic memory_address      | $                         | Reduce          | R12: memory_address → operand
+12       | $ mnemonic operand             | $                         | Reduce          | R1: mnemonic operand → instruction
+13       | $ instruction                  | $                         | Accept          | ✅ پذیرش             
+────────────────────────────────────────────────────────────────────────────────────────────────────
+✅ پارس موفق - دستور معتبر است
+
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+ مثال 4: WBINVD - دستور بدون Operand
 ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 📋 دستور ورودی: WBINVD
@@ -83,15 +115,15 @@ R13    | Offset → - NUMBER                             | offset منفی
 مرحله    | پشته (Stack)                   | ورودی باقی‌مانده          | عملیات          | قانون/توضیح         
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 1        | $                              | WBINVD $                  | Shift           | انتقال WBINVD       
-2        | $ WBINVD                       | $                         | Reduce          | R6: WBINVD → Mnem   
-3        | $ Mnemonic                     | $                         | Reduce          | R2: Mnem → Inst     
-4        | $ Instruction                  | $                         | Accept          | ✅ پذیرش             
+2        | $ WBINVD                       | $                         | Reduce          | R10: WBINVD → mnemonic
+3        | $ mnemonic                     | $                         | Reduce          | R2: mnemonic → instruction
+4        | $ instruction                  | $                         | Accept          | ✅ پذیرش             
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 ✅ پارس موفق - دستور معتبر است
 
 
 ════════════════════════════════════════════════════════════════════════════════════════════════════
- مثال 4: CLWB [cache_line] - دستور با Label
+ مثال 5: CLWB [cache_line] - دستور با Label
 ════════════════════════════════════════════════════════════════════════════════════════════════════
 
 📋 دستور ورودی: CLWB [cache_line]
@@ -100,15 +132,41 @@ R13    | Offset → - NUMBER                             | offset منفی
 مرحله    | پشته (Stack)                   | ورودی باقی‌مانده          | عملیات          | قانون/توضیح         
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 1        | $                              | CLWB [ cache_line ] $     | Shift           | انتقال CLWB         
-2        | $ CLWB                         | [ cache_line ] $          | Reduce          | R4: CLWB → Mnem     
-3        | $ Mnemonic                     | [ cache_line ] $          | Shift           | انتقال [            
-4        | $ Mnemonic [                   | cache_line ] $            | Shift           | انتقال شناسه        
-5        | $ Mnemonic [ cache_line        | ] $                       | Reduce          | R11: ID → Base      
-6        | $ Mnemonic [ Base              | ] $                       | Shift           | انتقال ]            
-7        | $ Mnemonic [ Base ]            | $                         | Reduce          | R8: [Base] → MemAddr
-8        | $ Mnemonic MemAddr             | $                         | Reduce          | R7: MemAddr → Operand
-9        | $ Mnemonic Operand             | $                         | Reduce          | R1: Mnem+Op → Inst  
-10       | $ Instruction                  | $                         | Accept          | ✅ پذیرش             
+2        | $ CLWB                         | [ cache_line ] $          | Reduce          | R5: CLWB → mnemonic
+3        | $ mnemonic                     | [ cache_line ] $          | Shift           | انتقال [            
+4        | $ mnemonic [                   | cache_line ] $            | Shift           | انتقال IDENTIFIER   
+5        | $ mnemonic [ IDENTIFIER        | ] $                       | Reduce          | R16: IDENTIFIER → base_expr
+6        | $ mnemonic [ base_expr         | ] $                       | Shift           | انتقال ]            
+7        | $ mnemonic [ base_expr ]       | $                         | Reduce          | R13: [...] → memory_address
+8        | $ mnemonic memory_address      | $                         | Reduce          | R12: memory_address → operand
+9        | $ mnemonic operand             | $                         | Reduce          | R1: mnemonic operand → instruction
+10       | $ instruction                  | $                         | Accept          | ✅ پذیرش             
+────────────────────────────────────────────────────────────────────────────────────────────────────
+✅ پارس موفق - دستور معتبر است
+
+
+════════════════════════════════════════════════════════════════════════════════════════════════════
+ مثال 6: PREFETCHNTA [RAX+128] - رجیستر 64-bit با Offset
+════════════════════════════════════════════════════════════════════════════════════════════════════
+
+📋 دستور ورودی: PREFETCHNTA [RAX+128]
+
+────────────────────────────────────────────────────────────────────────────────────────────────────
+مرحله    | پشته (Stack)                     | ورودی باقی‌مانده          | عملیات          | قانون/توضیح         
+────────────────────────────────────────────────────────────────────────────────────────────────────
+1        | $                                | PREFETCHNTA [ RAX + 128 ] $ | Shift         | انتقال PREFETCHNTA  
+2        | $ PREFETCHNTA                    | [ RAX + 128 ] $           | Reduce          | R9: PREFETCHNTA → mnemonic
+3        | $ mnemonic                       | [ RAX + 128 ] $           | Shift           | انتقال [            
+4        | $ mnemonic [                     | RAX + 128 ] $             | Shift           | انتقال REGISTER     
+5        | $ mnemonic [ REGISTER            | + 128 ] $                 | Shift           | انتقال +            
+6        | $ mnemonic [ REGISTER +          | 128 ] $                   | Shift           | انتقال NUMBER       
+7        | $ mnemonic [ REGISTER + NUMBER   | ] $                       | Reduce          | R17: + NUMBER → offset
+8        | $ mnemonic [ REGISTER offset     | ] $                       | Reduce          | R14: REGISTER offset → base_expr
+9        | $ mnemonic [ base_expr           | ] $                       | Shift           | انتقال ]            
+10       | $ mnemonic [ base_expr ]         | $                         | Reduce          | R13: [...] → memory_address
+11       | $ mnemonic memory_address        | $                         | Reduce          | R12: memory_address → operand
+12       | $ mnemonic operand               | $                         | Reduce          | R1: mnemonic operand → instruction
+13       | $ instruction                    | $                         | Accept          | ✅ پذیرش             
 ────────────────────────────────────────────────────────────────────────────────────────────────────
 ✅ پارس موفق - دستور معتبر است
 
@@ -117,8 +175,8 @@ R13    | Offset → - NUMBER                             | offset منفی
 📝 نتیجه‌گیری
 ════════════════════════════════════════════════════════════════════════════════════════════════════
 
-✅ تمامی دستورات با موفقیت پارس شدند
-✅ گرامر بدون ابهام است
+✅ تمامی 6 دستور با موفقیت پارس شدند
+✅ گرامر بدون ابهام است (Unambiguous)
 ✅ Parser به صورت Bottom-Up (LR) کار می‌کند
 ✅ هر دستور دقیقاً یک درخت تجزیه دارد
 
@@ -126,4 +184,6 @@ R13    | Offset → - NUMBER                             | offset منفی
 1. گرامر طراحی شده قابل پارس با روش Shift-Reduce است
 2. تمام حالات (با/بدون operand، با/بدون offset، رجیستر/شناسه) پشتیبانی می‌شوند
 3. مراحل پارسینگ منطقی و قابل پیش‌بینی هستند
+4. شماره‌گذاری قوانین با lr_tables.py و grammar.txt هماهنگ است
 
+════════════════════════════════════════════════════════════════════════════════════════════════════

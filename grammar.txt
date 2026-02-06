@@ -1,23 +1,86 @@
+═══════════════════════════════════════════════════════════════════
+                    Grammar Rules - Cache Control Instructions
+                    گرامر دستورات کنترل کش
+                    تیم ۱۵ - پروژه کامپایلر - دانشگاه شهید باهنر کرمان
+═══════════════════════════════════════════════════════════════════
 
-=== گرامر BNF برای دستورات کنترل کش ===
+🔹 نماد اولیه (Start Symbol):
+   S' → instruction
 
-<Instruction>     ::= <Mnemonic> <Operand> | <Mnemonic>
-<Mnemonic>        ::= <CacheFlush> | <CacheWrite> | <CachePrefetch> | <CacheInvalidate>
+📜 قوانین تولید (Production Rules):
 
-<CacheFlush>      ::= "CLFLUSH" | "CLFLUSHOPT"
-<CacheWrite>      ::= "CLWB"
-<CachePrefetch>   ::= "PREFETCHT0" | "PREFETCHT1" | "PREFETCHT2" | "PREFETCHNTA"
-<CacheInvalidate> ::= "WBINVD" | "INVD"
+─────────────────────────────────────────────────────────────────
+  دستورات (Instructions)
+─────────────────────────────────────────────────────────────────
 
-<Operand>         ::= <MemoryAddress> | ε
-<MemoryAddress>   ::= "[" <BaseExpr> "]"
-<BaseExpr>        ::= <Register> <Offset> | <Register> | <Label>
+R1:  instruction → mnemonic operand
+R2:  instruction → mnemonic
 
-<Offset>          ::= "+" <Number> | "-" <Number>
-<Register>        ::= "EAX" | "EBX" | "ECX" | "EDX" | "ESI" | "EDI" | "EBP" | "ESP" |
-                      "RAX" | "RBX" | "RCX" | "RDX" | "RSI" | "RDI" | "RBP" | "RSP"
+─────────────────────────────────────────────────────────────────
+  Mnemonics (نام دستورها)
+─────────────────────────────────────────────────────────────────
 
-<Number>          ::= <Digit>+
-<Digit>           ::= "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-<Label>           ::= <Identifier>
-<Identifier>      ::= [a-zA-Z_][a-zA-Z0-9_]*
+R3:  mnemonic → CLFLUSH
+R4:  mnemonic → CLFLUSHOPT
+R5:  mnemonic → CLWB
+R6:  mnemonic → PREFETCHT0
+R7:  mnemonic → PREFETCHT1
+R8:  mnemonic → PREFETCHT2
+R9:  mnemonic → PREFETCHNTA
+R10: mnemonic → WBINVD
+R11: mnemonic → INVD
+
+─────────────────────────────────────────────────────────────────
+  Operands (عملوندها)
+─────────────────────────────────────────────────────────────────
+
+R12: operand → memory_address
+
+─────────────────────────────────────────────────────────────────
+  Memory Address (آدرس حافظه)
+─────────────────────────────────────────────────────────────────
+
+R13: memory_address → LBRACKET base_expr RBRACKET
+
+─────────────────────────────────────────────────────────────────
+  Base Expression (عبارت پایه)
+─────────────────────────────────────────────────────────────────
+
+R14: base_expr → REGISTER offset
+R15: base_expr → REGISTER
+R16: base_expr → IDENTIFIER
+
+─────────────────────────────────────────────────────────────────
+  Offset (جابجایی)
+─────────────────────────────────────────────────────────────────
+
+R17: offset → PLUS NUMBER
+R18: offset → MINUS NUMBER
+
+═══════════════════════════════════════════════════════════════════
+📌 توضیحات:
+
+• Non-terminals (غیرپایانه‌ها):
+  instruction, mnemonic, operand, memory_address, base_expr, offset
+
+• Terminals (پایانه‌ها):
+  CLFLUSH, CLFLUSHOPT, CLWB, PREFETCHT0, PREFETCHT1, PREFETCHT2,
+  PREFETCHNTA, WBINVD, INVD, REGISTER, IDENTIFIER, NUMBER,
+  LBRACKET ([), RBRACKET (]), PLUS (+), MINUS (-)
+
+• نوع گرامر: Context-Free Grammar (CFG)
+• قابل پارس با: LR(0)
+• ابهام: ندارد (Unambiguous)
+
+═══════════════════════════════════════════════════════════════════
+💡 نکات:
+
+1. دستورات WBINVD و INVD می‌توانند بدون operand باشند (قانون R2)
+2. سایر دستورات (CLFLUSH، CLFLUSHOPT، CLWB، PREFETCH*) باید operand داشته باشند
+3. Operand همیشه به صورت [base_expr] است
+4. Base expression می‌تواند:
+   - رجیستر ساده: [EAX]
+   - رجیستر با offset: [EBX+16] یا [ECX-8]
+   - شناسه/لیبل: [cache_line]
+
+═══════════════════════════════════════════════════════════════════
