@@ -578,163 +578,418 @@ AST: Instruction(WBINVD, None)
 
 (بخش کامل تست‌های منو 3 تا منو 10 همان‌طور که در متن شما بود در این فایل هم باید قرار بگیرد.)
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML
+<div dir="rtl">
 
-`   ### منو 3: پارس فایل Assembly  **هدف:** پارس یک فایل کامل assembly و نمایش آمار  #### تست 3.1: فایل cache_instructions.asm (44 دستور)  **ورودی:**  ```text  ➤ انتخاب شما: 3  ➤ نام فایل: cache_instructions.asm   `
+### منو 3: پارس فایل Assembly
 
-**خروجی:**
+**هدف:** پارس یک فایل کامل assembly و نمایش آمار
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text📁 فایل یافت شد: examples/cache_instructions.asm  🔄 در حال پارس فایل...  📊 نتیجه:    ✓ موفق: 44 دستور    ✗ خطا: 0 دستور  ✅ دستورات معتبر:    خط  13: CLFLUSH [EAX]                       → flush    خط  14: CLFLUSH [EBX+64]                    → flush    خط  15: CLFLUSH [ECX-16]                    → flush    خط  17: CLFLUSHOPT [EDX]                    → flush    خط  18: CLFLUSHOPT [ESI+128]                → flush    خط  19: CLFLUSHOPT [cache_data]             → flush    خط  25: PREFETCHT0 [EDI]                    → prefetch    خط  26: PREFETCHT0 [EBP+32]                 → prefetch    خط  28: PREFETCHT1 [ESP]                    → prefetch    خط  29: PREFETCHT1 [RAX+256]                → prefetch    خط  31: PREFETCHT2 [RBX]                    → prefetch    خط  32: PREFETCHT2 [RCX-64]                 → prefetch    خط  34: PREFETCHNTA [RDX+512]               → prefetch    خط  35: PREFETCHNTA [data_buffer]           → prefetch    خط  41: CLWB [RSI]                          → writeback    ... و 29 دستور دیگر   `
-
-**تحلیل:**
-
-*   ✅ 44 دستور همگی موفق پارس شدند
-    
-*   ✅ هیچ خطایی وجود ندارد
-    
-*   ✅ انواع مختلف دستورات، رجیسترها و offset ها
-    
-
-تست 3.2: فایل advanced\_test.asm (90 دستور)
--------------------------------------------
+#### تست 3.1: فایل cache_instructions.asm (44 دستور)
 
 **ورودی:**
+```text
+➤ انتخاب شما: 3
+➤ نام فایل: cache_instructions.asm
+خروجی:
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text➤ نام فایل: advanced_test.asm   `
+text
+📁 فایل یافت شد: examples/cache_instructions.asm
 
-**خروجی:**
+🔄 در حال پارس فایل...
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text📊 نتیجه:    ✓ موفق: 90 دستور    ✗ خطا: 0 دستور  ✅ دستورات معتبر:    خط  12: CLFLUSH [EAX]                       → flush    خط  13: CLFLUSH [EBX+1]                     → flush    خط  14: CLFLUSH [ECX+16]                    → flush    خط  15: CLFLUSH [EDX+256]                   → flush    خط  16: CLFLUSH [ESI-1]                     → flush    خط  17: CLFLUSH [EDI-32]                    → flush    خط  18: CLFLUSH [EBP-512]                   → flush    خط  19: CLFLUSH [ESP+0]                     → flush    خط  25: CLFLUSHOPT [RAX]                    → flush    خط  26: CLFLUSHOPT [RBX+128]                → flush    ... و 80 دستور دیگر   `
+📊 نتیجه:
+  ✓ موفق: 44 دستور
+  ✗ خطا: 0 دستور
 
-**تحلیل:**
+✅ دستورات معتبر:
+  خط  13: CLFLUSH [EAX]                       → flush
+  خط  14: CLFLUSH [EBX+64]                    → flush
+  خط  15: CLFLUSH [ECX-16]                    → flush
+  خط  17: CLFLUSHOPT [EDX]                    → flush
+  خط  18: CLFLUSHOPT [ESI+128]                → flush
+  خط  19: CLFLUSHOPT [cache_data]             → flush
+  خط  25: PREFETCHT0 [EDI]                    → prefetch
+  خط  26: PREFETCHT0 [EBP+32]                 → prefetch
+  خط  28: PREFETCHT1 [ESP]                    → prefetch
+  خط  29: PREFETCHT1 [RAX+256]                → prefetch
+  خط  31: PREFETCHT2 [RBX]                    → prefetch
+  خط  32: PREFETCHT2 [RCX-64]                 → prefetch
+  خط  34: PREFETCHNTA [RDX+512]               → prefetch
+  خط  35: PREFETCHNTA [data_buffer]           → prefetch
+  خط  41: CLWB [RSI]                          → writeback
+  ... و 29 دستور دیگر
+تحلیل:
 
-*   ✅ 90 دستور پیشرفته همگی موفق
-    
-*   ✅ شامل تمام حالات: offset های کوچک، بزرگ، مثبت، منفی، صفر
-    
-*   ✅ تمام رجیسترها: 32-bit، 64-bit، مدرن (R8-R15)
-    
+✅ 44 دستور همگی موفق پارس شدند
 
-تست 3.3: فایل test\_mixed.asm (ترکیب صحیح و خطا)
-------------------------------------------------
+✅ هیچ خطایی وجود ندارد
 
-**ورودی:**
+✅ انواع مختلف دستورات، رجیسترها و offset ها
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text➤ نام فایل: test_mixed.asm   `
+تست 3.2: فایل advanced_test.asm (90 دستور)
+ورودی:
 
-**خروجی:**
+text
+➤ نام فایل: advanced_test.asm
+خروجی:
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text🔄 در حال پارس فایل...  ❌ SYNTAX ERROR at 'INVALID' (type: IDENTIFIER, line: 1)  [پیام راهنمای کامل]  ❌ SYNTAX ERROR at 'MOV' (type: IDENTIFIER, line: 1)  کاراکتر غیرمجاز ',' در خط 1  [پیام راهنمای کامل]  ❌ SYNTAX ERROR at 'EAX' (type: REGISTER, line: 1)  ⚠️  رجیستر بدون '[' و ']'؟  [پیام راهنمای کامل]  ... [خطاهای دیگر]  📊 نتیجه:    ✓ موفق: 15 دستور    ✗ خطا: 7 دستور  ✅ دستورات معتبر:    خط  11: CLFLUSH [EAX]    خط  12: CLFLUSHOPT [EBX+32]    خط  13: PREFETCHT0 [ECX-16]    خط  14: WBINVD    خط  15: CLWB [cache_buffer]    ... و 10 دستور دیگر  ❌ خطاها:    خط  21: INVALID [EAX]           → پارس ناموفق (دستور نامعتبر)    خط  22: MOV EAX, EBX           → پارس ناموفق (خارج از scope)    خط  23: CLFLUSH EAX           → پارس ناموفق (بدون براکت)    خط  24: PREFETCH [ECX]           → پارس ناموفق (نام اشتباه)    خط  49: ADD EAX, EBX           → پارس ناموفق (دستور x86 عادی)    خط  50: CLFLUSH [EAX] [EBX]           → پارس ناموفق (دو operand)    خط  51: CLFLUSHOPT           → پارس ناموفق (بدون operand - نیاز به operand)   `
+text
+📊 نتیجه:
+  ✓ موفق: 90 دستور
+  ✗ خطا: 0 دستور
 
-**تحلیل:**
+✅ دستورات معتبر:
+  خط  12: CLFLUSH [EAX]                       → flush
+  خط  13: CLFLUSH [EBX+1]                     → flush
+  خط  14: CLFLUSH [ECX+16]                    → flush
+  خط  15: CLFLUSH [EDX+256]                   → flush
+  خط  16: CLFLUSH [ESI-1]                     → flush
+  خط  17: CLFLUSH [EDI-32]                    → flush
+  خط  18: CLFLUSH [EBP-512]                   → flush
+  خط  19: CLFLUSH [ESP+0]                     → flush
+  خط  25: CLFLUSHOPT [RAX]                    → flush
+  خط  26: CLFLUSHOPT [RBX+128]                → flush
+  ... و 80 دستور دیگر
+تحلیل:
 
-*   ✅ 15 دستور صحیح به درستی پارس شدند
-    
-*   ✅ 7 خطا به درستی شناسایی شدند
-    
-*   ✅ پیام‌های خطا دقیق و راهنما هستند
-    
+✅ 90 دستور پیشرفته همگی موفق
+
+✅ شامل تمام حالات: offset های کوچک، بزرگ، مثبت، منفی، صفر
+
+✅ تمام رجیسترها: 32-bit، 64-bit، مدرن (R8-R15)
+
+تست 3.3: فایل test_mixed.asm (ترکیب صحیح و خطا)
+ورودی:
+
+text
+➤ نام فایل: test_mixed.asm
+خروجی:
+
+text
+🔄 در حال پارس فایل...
+
+❌ SYNTAX ERROR at 'INVALID' (type: IDENTIFIER, line: 1)
+[پیام راهنمای کامل]
+
+❌ SYNTAX ERROR at 'MOV' (type: IDENTIFIER, line: 1)
+کاراکتر غیرمجاز ',' در خط 1
+[پیام راهنمای کامل]
+
+❌ SYNTAX ERROR at 'EAX' (type: REGISTER, line: 1)
+⚠️  رجیستر بدون '[' و ']'؟
+[پیام راهنمای کامل]
+
+... [خطاهای دیگر]
+
+📊 نتیجه:
+  ✓ موفق: 15 دستور
+  ✗ خطا: 7 دستور
+
+✅ دستورات معتبر:
+  خط  11: CLFLUSH [EAX]
+  خط  12: CLFLUSHOPT [EBX+32]
+  خط  13: PREFETCHT0 [ECX-16]
+  خط  14: WBINVD
+  خط  15: CLWB [cache_buffer]
+  ... و 10 دستور دیگر
+
+❌ خطاها:
+  خط  21: INVALID [EAX]
+         → پارس ناموفق (دستور نامعتبر)
+  خط  22: MOV EAX, EBX
+         → پارس ناموفق (خارج از scope)
+  خط  23: CLFLUSH EAX
+         → پارس ناموفق (بدون براکت)
+  خط  24: PREFETCH [ECX]
+         → پارس ناموفق (نام اشتباه)
+  خط  49: ADD EAX, EBX
+         → پارس ناموفق (دستور x86 عادی)
+  خط  50: CLFLUSH [EAX] [EBX]
+         → پارس ناموفق (دو operand)
+  خط  51: CLFLUSHOPT
+         → پارس ناموفق (بدون operand - نیاز به operand)
+تحلیل:
+
+✅ 15 دستور صحیح به درستی پارس شدند
+
+✅ 7 خطا به درستی شناسایی شدند
+
+✅ پیام‌های خطا دقیق و راهنما هستند
 
 منو 4: نمایش جدول LR(0)
------------------------
+هدف: نمایش جدول Action-Goto کامل
 
-**هدف:** نمایش جدول Action-Goto کامل
+ورودی:
 
-**ورودی:**
+text
+➤ انتخاب شما: 4
+خروجی:
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text➤ انتخاب شما: 4   `
+text
+════════════════════════════════════════════════════════════════════
+                         جدول LR(0) Parser
+════════════════════════════════════════════════════════════════════
 
-**خروجی:**
+📊 آمار جدول:
+  -  تعداد States: 17
+  -  تعداد Terminals: 7 (CLFLUSH، CLFLUSHOPT، CLWB، ... ، NUMBER)
+  -  تعداد Non-terminals: 5 (instruction، mnemonic، operand، ...)
+  -  تعداد Actions: 120+
+  -  تعداد Gotos: 60+
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text════════════════════════════════════════════════════════════════════                           جدول LR(0) Parser  ════════════════════════════════════════════════════════════════════  📊 آمار جدول:    -  تعداد States: 17    -  تعداد Terminals: 7 (CLFLUSH، CLFLUSHOPT، CLWB، ... ، NUMBER)    -  تعداد Non-terminals: 5 (instruction، mnemonic، operand، ...)    -  تعداد Actions: 120+    -  تعداد Gotos: 60+  ┌────────┬─────────────── ACTION ───────────────┬─────── GOTO ───────┐  │ State  │ CLFLUSH  CLWB   [    +    -    $     │ inst   mnem  oper  │  ├────────┼──────────────────────────────────────┼────────────────────┤  │   0    │  s3      s5    -    -    -    -      │  1     2     -     │  │   1    │  -       -     -    -    -    acc    │  -     -     -     │  │   2    │  -       -     s6   -    -    r2     │  -     -     7     │  │   3    │  -       -     -    -    -    r3     │  -     -     -     │  │   4    │  -       -     -    -    -    r4     │  -     -     -     │  │   5    │  -       -     -    -    -    r5     │  -     -     -     │  │   6    │  -       -     -    -    -    -      │  -     -     8     │  │   7    │  -       -     -    -    -    r1     │  -     -     -     │  │   8    │  -       -     -    -    -    -      │  -     -     -     │  │  ...   │  ...                                  │  ...               │  │  16    │  -       -     -    s15  s16  -      │  -     -     -     │  └────────┴──────────────────────────────────────┴────────────────────┘  راهنما:    -  s#  : shift به state #    -  r#  : reduce با قانون #    -  acc : accept    -  -   : error  تعداد Shift Actions: 85  تعداد Reduce Actions: 42  تعداد Accept: 1  تعداد Errors: 73   `
+┌────────┬─────────────── ACTION ───────────────┬─────── GOTO ───────┐
+│ State  │ CLFLUSH  CLWB   [    +    -    $     │ inst   mnem  oper  │
+├────────┼──────────────────────────────────────┼────────────────────┤
+│   0    │  s3      s5    -    -    -    -      │  1     2     -     │
+│   1    │  -       -     -    -    -    acc    │  -     -     -     │
+│   2    │  -       -     s6   -    -    r2     │  -     -     7     │
+│   3    │  -       -     -    -    -    r3     │  -     -     -     │
+│   4    │  -       -     -    -    -    r4     │  -     -     -     │
+│   5    │  -       -     -    -    -    r5     │  -     -     -     │
+│   6    │  -       -     -    -    -    -      │  -     -     8     │
+│   7    │  -       -     -    -    -    r1     │  -     -     -     │
+│   8    │  -       -     -    -    -    -      │  -     -     -     │
+│  ...   │  ...                                  │  ...               │
+│  16    │  -       -     -    s15  s16  -      │  -     -     -     │
+└────────┴──────────────────────────────────────┴────────────────────┘
 
-**تحلیل:**
+راهنما:
+  -  s#  : shift به state #
+  -  r#  : reduce با قانون #
+  -  acc : accept
+  -  -   : error
 
-*   ✅ جدول کامل با 17 state
-    
-*   ✅ action های shift و reduce مشخص
-    
-*   ✅ goto برای non-terminal ها
-    
+تعداد Shift Actions: 85
+تعداد Reduce Actions: 42
+تعداد Accept: 1
+تعداد Errors: 73
+تحلیل:
+
+✅ جدول کامل با 17 state
+
+✅ action های shift و reduce مشخص
+
+✅ goto برای non-terminal ها
 
 منو 5: تحلیل دستی Shift-Reduce
-------------------------------
+هدف: نمایش گام‌به‌گام پردازش parser
 
-**هدف:** نمایش گام‌به‌گام پردازش parser
+تست 5.1: CLFLUSHOPT [EBX+16]
+ورودی:
 
-تست 5.1: CLFLUSHOPT \[EBX+16\]
-------------------------------
+text
+➤ انتخاب شما: 5
+➤ دستور: CLFLUSHOPT [EBX+16]
+خروجی:
 
-**ورودی:**
+text
+════════════════════════════════════════════════════════════════════
+                    تحلیل Shift-Reduce Parser
+════════════════════════════════════════════════════════════════════
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text➤ انتخاب شما: 5  ➤ دستور: CLFLUSHOPT [EBX+16]   `
+دستور: CLFLUSHOPT [EBX+16]
 
-**خروجی:**
+Token Stream:
+  ['CLFLUSHOPT', 'LBRACKET', 'REGISTER(EBX)', 'PLUS', 'NUMBER(16)', 'RBRACKET', '$']
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text════════════════════════════════════════════════════════════════════                      تحلیل Shift-Reduce Parser  ════════════════════════════════════════════════════════════════════  دستور: CLFLUSHOPT [EBX+16]  Token Stream:    ['CLFLUSHOPT', 'LBRACKET', 'REGISTER(EBX)', 'PLUS', 'NUMBER(16)', 'RBRACKET', '$']  گام‌های پردازش:  ┌──────┬─────────────────────────┬─────────────────────┬─────────────┐  │ گام  │ Stack                   │ Input               │ Action      │  ├──────┼─────────────────────────┼─────────────────────┼─────────────┤  │  1   │                      │ CLFLUSHOPT [EBX+... │ SHIFT 4     │  │  2   │ [0, CLFLUSHOPT, 4]      │ [EBX+16] $          │ REDUCE R4   │  │  3   │ [0, mnemonic, 2]        │ [EBX+16] $          │ SHIFT 6     │  │  4   │ [0, mnemonic, 2, [, 6]  │ EBX+16] $           │ SHIFT 9     │  │  5   │ [0, ..., REGISTER, 9]   │ +16] $              │ SHIFT 15    │  │  6   │ [0, ..., +, 15]         │ 16] $               │ SHIFT 17    │  │  7   │ [0, ..., NUMBER, 17]    │ ] $                 │ REDUCE R17  │  │  8   │ [0, ..., offset, 16]    │ ] $                 │ REDUCE R14  │  │  9   │ [0, ..., base_expr, 8]  │ ] $                 │ SHIFT 11    │  │ 10   │ [0, ..., ], 11]         │ $                   │ REDUCE R13  │  │ 11   │ [0, ..., mem_addr, 10]  │ $                   │ REDUCE R12  │  │ 12   │ [0, mnem, 2, oper, 7]   │ $                   │ REDUCE R1   │  │ 13   │ [0, instruction, 1]     │ $                   │ ACCEPT      │  └──────┴─────────────────────────┴─────────────────────┴─────────────┘  ✅ پارس موفق! (13 گام)  قوانین استفاده شده:    -  R4:  mnemonic → CLFLUSHOPT    -  R17: offset → + NUMBER    -  R14: base_expr → REGISTER offset    -  R13: memory_address → [ base_expr ]    -  R12: operand → memory_address    -  R1:  instruction → mnemonic operand   `
+گام‌های پردازش:
 
+┌──────┬─────────────────────────┬─────────────────────┬─────────────┐
+│ گام  │ Stack                   │ Input               │ Action      │
+├──────┼─────────────────────────┼─────────────────────┼─────────────┤
+│  1   │                      │ CLFLUSHOPT [EBX+... │ SHIFT 4     │
+│  2   │ [0, CLFLUSHOPT, 4]      │ [EBX+16] $          │ REDUCE R4   │
+│  3   │ [0, mnemonic, 2]        │ [EBX+16] $          │ SHIFT 6     │
+│  4   │ [0, mnemonic, 2, [, 6]  │ EBX+16] $           │ SHIFT 9     │
+│  5   │ [0, ..., REGISTER, 9]   │ +16] $              │ SHIFT 15    │
+│  6   │ [0, ..., +, 15]         │ 16] $               │ SHIFT 17    │
+│  7   │ [0, ..., NUMBER, 17]    │ ] $                 │ REDUCE R17  │
+│  8   │ [0, ..., offset, 16]    │ ] $                 │ REDUCE R14  │
+│  9   │ [0, ..., base_expr, 8]  │ ] $                 │ SHIFT 11    │
+│ 10   │ [0, ..., ], 11]         │ $                   │ REDUCE R13  │
+│ 11   │ [0, ..., mem_addr, 10]  │ $                   │ REDUCE R12  │
+│ 12   │ [0, mnem, 2, oper, 7]   │ $                   │ REDUCE R1   │
+│ 13   │ [0, instruction, 1]     │ $                   │ ACCEPT      │
+└──────┴─────────────────────────┴─────────────────────┴─────────────┘
+
+✅ پارس موفق! (13 گام)
+
+قوانین استفاده شده:
+  -  R4:  mnemonic → CLFLUSHOPT
+  -  R17: offset → + NUMBER
+  -  R14: base_expr → REGISTER offset
+  -  R13: memory_address → [ base_expr ]
+  -  R12: operand → memory_address
+  -  R1:  instruction → mnemonic operand
 تست 5.2: WBINVD (بدون operand)
-------------------------------
+ورودی:
 
-**ورودی:**
+text
+➤ دستور: WBINVD
+خروجی:
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text➤ دستور: WBINVD   `
+text
+Token Stream:
+  ['WBINVD', '$']
 
-**خروجی:**
+گام‌های پردازش:
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   textToken Stream:    ['WBINVD', '$']  گام‌های پردازش:  ┌──────┬─────────────────────────┬─────────────────────┬─────────────┐  │ گام  │ Stack                   │ Input               │ Action      │  ├──────┼─────────────────────────┼─────────────────────┼─────────────┤  │  1   │                      │ WBINVD $            │ SHIFT 10    │  │  2   │ [0, WBINVD, 10]         │ $                   │ REDUCE R10  │  │  3   │ [0, mnemonic, 2]        │ $                   │ REDUCE R2   │  │  4   │ [0, instruction, 1]     │ $                   │ ACCEPT      │  └──────┴─────────────────────────┴─────────────────────┴─────────────┘  ✅ پارس موفق! (4 گام)  قوانین استفاده شده:    -  R10: mnemonic → WBINVD    -  R2:  instruction → mnemonic   `
+┌──────┬─────────────────────────┬─────────────────────┬─────────────┐
+│ گام  │ Stack                   │ Input               │ Action      │
+├──────┼─────────────────────────┼─────────────────────┼─────────────┤
+│  1   │                      │ WBINVD $            │ SHIFT 10    │
+│  2   │ [0, WBINVD, 10]         │ $                   │ REDUCE R10  │
+│  3   │ [0, mnemonic, 2]        │ $                   │ REDUCE R2   │
+│  4   │ [0, instruction, 1]     │ $                   │ ACCEPT      │
+└──────┴─────────────────────────┴─────────────────────┴─────────────┘
 
+✅ پارس موفق! (4 گام)
+
+قوانین استفاده شده:
+  -  R10: mnemonic → WBINVD
+  -  R2:  instruction → mnemonic
 منو 6: اجرای تست‌های خودکار
----------------------------
+ورودی:
 
-**ورودی:**
+text
+➤ انتخاب شما: 6
+خروجی:
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text➤ انتخاب شما: 6   `
+text
+════════════════════════════════════════════════════════════════════
+                      اجرای تست‌های خودکار
+════════════════════════════════════════════════════════════════════
 
-**خروجی:**
+🔄 در حال اجرای تست‌ها...
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text════════════════════════════════════════════════════════════════════                        اجرای تست‌های خودکار  ════════════════════════════════════════════════════════════════════  🔄 در حال اجرای تست‌ها...  ──────────────────────────────────────────────────────────────────  تست 1: Import Parser                    ✅ موفق  ──────────────────────────────────────────────────────────────────  تست 2: پارس دستورات ساده    ✅ CLFLUSH [EAX]    ✅ CLFLUSHOPT [EBX+16]    ✅ PREFETCHT0 [ECX-8]    ✅ WBINVD    ✅ CLWB [cache_line]    ✅ PREFETCHNTA [RAX+128]  ──────────────────────────────────────────────────────────────────  تست 3: بررسی AST                        ✅ موفق  تست 4: بررسی Parse Tree                 ✅ موفق    تست 5: بررسی Derivation                 ✅ موفق  تست 6: بررسی operand requirement        ✅ موفق  📊 نتیجه نهایی: 21 موفق، 0 ناموفق  🎉 همه تست‌ها با موفقیت انجام شد!   `
+──────────────────────────────────────────────────────────────────
+تست 1: Import Parser                    ✅ موفق
+──────────────────────────────────────────────────────────────────
+تست 2: پارس دستورات ساده
+  ✅ CLFLUSH [EAX]
+  ✅ CLFLUSHOPT [EBX+16]
+  ✅ PREFETCHT0 [ECX-8]
+  ✅ WBINVD
+  ✅ CLWB [cache_line]
+  ✅ PREFETCHNTA [RAX+128]
 
+──────────────────────────────────────────────────────────────────
+تست 3: بررسی AST                        ✅ موفق
+تست 4: بررسی Parse Tree                 ✅ موفق  
+تست 5: بررسی Derivation                 ✅ موفق
+تست 6: بررسی operand requirement        ✅ موفق
+
+📊 نتیجه نهایی: 21 موفق، 0 ناموفق
+🎉 همه تست‌ها با موفقیت انجام شد!
 منو 7: نمایش قوانین گرامر
--------------------------
+ورودی:
 
-**ورودی:**
+text
+➤ انتخاب شما: 7
+خروجی:
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text➤ انتخاب شما: 7   `
+text
+════════════════════════════════════════════════════════════════════
+                      قوانین گرامر (18 قانون)
+════════════════════════════════════════════════════════════════════
 
-**خروجی:**
+📚 دسته‌بندی قوانین:
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text════════════════════════════════════════════════════════════════════                        قوانین گرامر (18 قانون)  ════════════════════════════════════════════════════════════════════  📚 دسته‌بندی قوانین:  ┌────────────────────────────────────────────────────────────────┐  │ 1. قوانین Instruction (2 قانون)                              │  └────────────────────────────────────────────────────────────────┘    R1:  instruction → mnemonic operand    R2:  instruction → mnemonic  ┌────────────────────────────────────────────────────────────────┐  │ 2. قوانین Mnemonic (9 قانون)                                 │  └────────────────────────────────────────────────────────────────┘    Cache Flush:     R3: CLFLUSH    R4: CLFLUSHOPT    Cache WriteBack: R5: CLWB    Cache Prefetch:  R6-R9: PREFETCH*    Cache Invalidate:R10: WBINVD   R11: INVD  ┌────────────────────────────────────────────────────────────────┐  │ 3. قوانین Operand (2 قانون)                                  │  └────────────────────────────────────────────────────────────────┘    R12: operand → memory_address    R13: memory_address → [ base_expr ]  ┌────────────────────────────────────────────────────────────────┐  │ 4. قوانین Base Expression (3 قانون)                          │  └────────────────────────────────────────────────────────────────┘    R14: base_expr → REGISTER offset    R15: base_expr → REGISTER    R16: base_expr → IDENTIFIER  ┌────────────────────────────────────────────────────────────────┐  │ 5. قوانین Offset (2 قانون)                                   │  └────────────────────────────────────────────────────────────────┘    R17: offset → + NUMBER    R18: offset → - NUMBER  📊 خلاصه: 18 قانون -  6 Non-terminal -  16 Terminal   `
+┌────────────────────────────────────────────────────────────────┐
+│ 1. قوانین Instruction (2 قانون)                              │
+└────────────────────────────────────────────────────────────────┘
 
+  R1:  instruction → mnemonic operand
+  R2:  instruction → mnemonic
+
+┌────────────────────────────────────────────────────────────────┐
+│ 2. قوانین Mnemonic (9 قانون)                                 │
+└────────────────────────────────────────────────────────────────┘
+
+  Cache Flush:     R3: CLFLUSH    R4: CLFLUSHOPT
+  Cache WriteBack: R5: CLWB
+  Cache Prefetch:  R6-R9: PREFETCH*
+  Cache Invalidate:R10: WBINVD   R11: INVD
+
+┌────────────────────────────────────────────────────────────────┐
+│ 3. قوانین Operand (2 قانون)                                  │
+└────────────────────────────────────────────────────────────────┘
+
+  R12: operand → memory_address
+  R13: memory_address → [ base_expr ]
+
+┌────────────────────────────────────────────────────────────────┐
+│ 4. قوانین Base Expression (3 قانون)                          │
+└────────────────────────────────────────────────────────────────┘
+
+  R14: base_expr → REGISTER offset
+  R15: base_expr → REGISTER
+  R16: base_expr → IDENTIFIER
+
+┌────────────────────────────────────────────────────────────────┐
+│ 5. قوانین Offset (2 قانون)                                   │
+└────────────────────────────────────────────────────────────────┘
+
+  R17: offset → + NUMBER
+  R18: offset → - NUMBER
+
+📊 خلاصه: 18 قانون -  6 Non-terminal -  16 Terminal
 منو 8: حالت تعاملی (Interactive)
---------------------------------
+ورودی:
 
-**ورودی:**
+text
+➤ انتخاب شما: 8
+خروجی:
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text➤ انتخاب شما: 8   `
+text
+════════════════════════════════════════════════════════════════════
+                        حالت تعاملی Parser
+════════════════════════════════════════════════════════════════════
 
-**خروجی:**
+➤ CLFLUSH [EAX]        ✅ موفق
+➤ PREFETCHT0 [RBX+32]  ✅ موفق  
+➤ WBINVD               ✅ موفق
+➤ INVALID [EAX]        ❌ خطا
+➤ CLFLUSH              ❌ نیاز به operand
+➤ exit
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text════════════════════════════════════════════════════════════════════                          حالت تعاملی Parser  ════════════════════════════════════════════════════════════════════  ➤ CLFLUSH [EAX]        ✅ موفق  ➤ PREFETCHT0 [RBX+32]  ✅ موفق    ➤ WBINVD               ✅ موفق  ➤ INVALID [EAX]        ❌ خطا  ➤ CLFLUSH              ❌ نیاز به operand  ➤ exit  آمار: 3 موفق، 2 ناموفق   `
-
+آمار: 3 موفق، 2 ناموفق
 منو 9: نمایش نمودار Automata
-----------------------------
+ورودی:
 
-**ورودی:**
+text
+➤ انتخاب شما: 9
+خروجی:
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text➤ انتخاب شما: 9   `
+text
+════════════════════════════════════════════════════════════════════
+                      نمودار اتوماتای LR(0)
+════════════════════════════════════════════════════════════════════
 
-**خروجی:**
+🔍 17 State -  Start: 0 -  Accept: 1
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text════════════════════════════════════════════════════════════════════                        نمودار اتوماتای LR(0)  ════════════════════════════════════════════════════════════════════  🔍 17 State -  Start: 0 -  Accept: 1  [State 0] ──CLFLUSH──→  ──$──→ R3         ├─CLFLUSHOPT→  ──$──→ R4         ├─CLWB──────→  ──$──→ R5         └─instruction→  ──$──→ ACCEPT  📁 lr0_automata.png (Graphviz)   `
+[State 0] ──CLFLUSH──→  ──$──→ R3
+       ├─CLFLUSHOPT→  ──$──→ R4
+       ├─CLWB──────→  ──$──→ R5
+       └─instruction→  ──$──→ ACCEPT
 
+📁 lr0_automata.png (Graphviz)
 منو 10: درباره پروژه
---------------------
+ورودی:
 
-**ورودی:**
+text
+➤ انتخاب شما: 10
+خروجی:
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text➤ انتخاب شما: 10   `
+text
+╔══════════════════════════════════════════════════════════════════╗
+║              Cache Control Instructions Parser                   ║
+║                    پروژه کامپایلر - گروه ۱۵                     ║
+╚══════════════════════════════════════════════════════════════════╝
 
-**خروجی:**
+📚 PLY Parser -  LR(0) Grammar -  18 Rules -  17 States
+📊 9 دستور -  33+ رجیستر -  150+ تست موفق
+💻 2500 خط کد -  8 فایل Python -  21 تست خودکار
 
-Plain textANTLR4BashCC#CSSCoffeeScriptCMakeDartDjangoDockerEJSErlangGitGoGraphQLGroovyHTMLJavaJavaScriptJSONJSXKotlinLaTeXLessLuaMakefileMarkdownMATLABMarkupObjective-CPerlPHPPowerShell.propertiesProtocol BuffersPythonRRubySass (Sass)Sass (Scss)SchemeSQLShellSwiftSVGTSXTypeScriptWebAssemblyYAMLXML`   text╔══════════════════════════════════════════════════════════════════╗  ║              Cache Control Instructions Parser                   ║  ║                    پروژه کامپایلر - گروه ۱۵                     ║  ╚══════════════════════════════════════════════════════════════════╝  📚 PLY Parser -  LR(0) Grammar -  18 Rules -  17 States  📊 9 دستور -  33+ رجیستر -  150+ تست موفق  💻 2500 خط کد -  8 فایل Python -  21 تست خودکار  دانشگاه شهید باهنر کرمان -  زمستان ۱۴۰۴ -  گروه 15   `
+دانشگاه شهید باهنر کرمان -  زمستان ۱۴۰۴ -  گروه 15
+</div>
