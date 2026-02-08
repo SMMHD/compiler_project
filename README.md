@@ -1172,7 +1172,7 @@ R18: offset → - NUMBER
 1. نصب Graphviz: [https://graphviz.org/](https://graphviz.org/)
 2. اجرای: python lr0_automata.py
 
-![نمودار گرافیکی]("F:\University\7th term\Compiler\Project\Compiler Project\image.png")
+![نمودار گرافیکی](F:\University\7th term\Compiler\Project\Compiler Project\image.png)
 
 ════════════════════════════════════════════════════════════════════
 ```
