@@ -1180,6 +1180,7 @@ R18: offset → - NUMBER
 - ✅ Accept state مشخص
 - ✅ امکان ایجاد تصویر گرافیکی
 
+![image](https://github.com/user-attachments/assets/db06fea8-49a0-4cac-bad4-3ded491a0d89)
 
 ---
 
