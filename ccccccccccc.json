@@ -1,0 +1,6 @@
+{
+  "type": "Instruction",
+  "mnemonic": "WBINVD",
+  "operand": null,
+  "has_operand": false
+}

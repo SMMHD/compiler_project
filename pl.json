@@ -1,0 +1,15 @@
+{
+  "type": "Instruction",
+  "mnemonic": "CLWB",
+  "operand": {
+    "type": "MemoryOperand",
+    "base": {
+      "type": "Register",
+      "name": "R12",
+      "bit_width": 64
+    },
+    "offset": null,
+    "has_offset": false
+  },
+  "has_operand": true
+}
