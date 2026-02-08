@@ -1172,11 +1172,11 @@ R18: offset → - NUMBER
 1. نصب Graphviz: [https://graphviz.org/](https://graphviz.org/)
 2. اجرای: python lr0_automata.py
 
-
-<img width="1855" height="463" alt="image" src="https://github.com/user-attachments/assets/db06fea8-49a0-4cac-bad4-3ded491a0d89" />
-
 ════════════════════════════════════════════════════════════════════
 ```
+<img width="1855" height="463" alt="image" src="https://github.com/user-attachments/assets/db06fea8-49a0-4cac-bad4-3ded491a0d89" />
+
+
 
 **تحلیل:**
 - ✅ 17 state با transition ها
